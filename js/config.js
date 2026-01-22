@@ -22,17 +22,17 @@ const CONFIG = {
         API_KEYS: 'courseCreator_apiKeys'
     },
     
-    // Optimized Master Prompt (minimal tokens, maximum quality)
-    COURSE_PROMPT: `Generate educational course JSON for: "{{TOPIC}}"
+    // Optimized Master Prompt - Topic-adaptive, unique content
+    COURSE_PROMPT: `Create course JSON for "{{TOPIC}}". Assess difficulty (beginner/intermediate/advanced) and adapt depth.
 
-Required JSON structure:
-{"introduction":"Welcome paragraph 150-200 words","lessons":[{"title":"string","description":"200-300 words","keyPoints":["point1","point2","point3"]}],"quiz":[{"question":"string","options":["A","B","C","D"],"correctIndex":0,"explanation":"string"}],"notes":"Markdown notes 500-800 words with # headers"}
+{"difficulty":"level","introduction":"150-200 words: what {{TOPIC}} is, why it matters, what you'll learn - BE SPECIFIC","lessons":[{"title":"{{TOPIC}}-specific title","description":"200-300 words with real examples","keyPoints":["specific","points","here"]}],"quiz":[{"question":"test {{TOPIC}} knowledge","options":["correct","wrong1","wrong2","wrong3"],"correctIndex":0,"explanation":"why"}],"notes":"# {{TOPIC}} Notes\\n500-800 words markdown with ## sections, examples, tips"}
 
 Rules:
-- 4 lessons: 1)Fundamentals 2)Core Methods 3)Applications 4)Advanced
-- 5 quiz questions with varied difficulty
-- Accurate, educational content
-- Valid JSON only, no markdown blocks`,
+- 4 lessons: Foundations→Core Skills→Application→Mastery
+- Beginner=simple language, zero assumptions; Advanced=technical depth
+- 5 quiz: 2 easy, 2 medium, 1 hard
+- ALL content SPECIFIC to {{TOPIC}}, no generic filler
+- Valid JSON only`,
     
     // Badge Definitions
     BADGES: [
