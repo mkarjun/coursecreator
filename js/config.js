@@ -23,19 +23,22 @@ const CONFIG = {
     },
     
     // Optimized Master Prompt - Topic-adaptive, unique content
-    COURSE_PROMPT: `Create course JSON for "{{TOPIC}}". Assess difficulty (beginner/intermediate/advanced) and adapt depth.
+    COURSE_PROMPT: `You are creating a course about "{{TOPIC}}". Generate JSON.
 
-{"difficulty":"level","introduction":"150-200 words: what {{TOPIC}} is, why it matters, what you'll learn - BE SPECIFIC","lessons":[{"title":"{{TOPIC}}-specific title","description":"200-300 words with real examples","keyPoints":["specific","points","here"]}],"quiz":[{"question":"factual question about {{TOPIC}} concepts","options":["correct","wrong1","wrong2","wrong3"],"correctIndex":0,"explanation":"why"}],"notes":"# {{TOPIC}} Notes\\n500-800 words markdown with ## sections, examples, tips"}
+QUIZ REQUIREMENTS - CRITICAL:
+- Questions must test FACTUAL knowledge OF {{TOPIC}} itself
+- For "Python": ask about syntax, functions, data types (e.g., "What does print() do?")
+- For "Quantum Computing": ask about qubits, superposition, gates (e.g., "What is a qubit?")
+- NEVER ask meta questions like "Why study X?" or "What's the best way to learn?"
+- Each question tests a SPECIFIC CONCEPT from the lessons
 
-Rules:
-- 4 lessons: Foundations→Core Skills→Application→Mastery
-- Beginner=simple language, zero assumptions; Advanced=technical depth
-- 5 quiz questions that TEST ACTUAL KNOWLEDGE of {{TOPIC}}
-  Example for Python: "What does len() return?" NOT "Why learn Python?"
-  Example for Guitar: "What is a chord?" NOT "What's the best way to practice?"
-- Quiz must have FACTUAL answers about {{TOPIC}} concepts, definitions, syntax, techniques
-- ALL content SPECIFIC to {{TOPIC}}, no generic learning advice
-- Valid JSON only`,
+JSON structure:
+{"difficulty":"beginner|intermediate|advanced","introduction":"150-200 words explaining what {{TOPIC}} is and why it matters","lessons":[{"title":"Lesson title","description":"200-300 words teaching concepts","keyPoints":["key concept 1","key concept 2","key concept 3"]}],"quiz":[{"question":"Question testing a specific {{TOPIC}} fact/concept","options":["correct answer","wrong1","wrong2","wrong3"],"correctIndex":0,"explanation":"Why this is correct"}],"notes":"# {{TOPIC}} Notes\\n500-800 words with ## sections"}
+
+Requirements:
+- 4 lessons progressing from basics to advanced
+- 5 quiz questions: test definitions, concepts, facts FROM the lesson content
+- Return valid JSON only`,
     
     // Badge Definitions
     BADGES: [
