@@ -104,19 +104,53 @@ const Auth = {
         }
         
         try {
-            // Initialize Google Sign-In
-            const auth2 = await this.loadGoogleAuth();
-            const googleUser = await auth2.signIn();
-            const profile = googleUser.getBasicProfile();
+            // Initialize Google Identity Services
+            await this.loadGoogleIdentityServices();
             
-            const user = {
-                id: profile.getId(),
-                name: profile.getName(),
-                email: profile.getEmail(),
-                avatar: profile.getImageUrl(),
-                provider: 'google',
-                mode: 'authenticated'
-            };
+            // Create a promise to handle the callback
+            const user = await new Promise((resolve, reject) => {
+                const client = google.accounts.oauth2.initTokenClient({
+                    client_id: this.providers.google.clientId,
+                    scope: 'email profile',
+                    callback: async (tokenResponse) => {
+                        if (tokenResponse.error) {
+                            reject(new Error(tokenResponse.error));
+                            return;
+                        }
+                        
+                        try {
+                            // Fetch user info using the access token
+                            const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                                headers: {
+                                    'Authorization': `Bearer ${tokenResponse.access_token}`
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch user info');
+                            }
+                            
+                            const profile = await response.json();
+                            resolve({
+                                id: profile.id,
+                                name: profile.name,
+                                email: profile.email,
+                                avatar: profile.picture,
+                                provider: 'google',
+                                mode: 'authenticated'
+                            });
+                        } catch (err) {
+                            reject(err);
+                        }
+                    },
+                    error_callback: (error) => {
+                        reject(new Error(error.message || 'Google sign-in failed'));
+                    }
+                });
+                
+                // Request the access token (this opens the popup)
+                client.requestAccessToken();
+            });
             
             // Sync to database
             await this.syncUserToDatabase(user);
@@ -128,29 +162,24 @@ const Auth = {
             
         } catch (error) {
             console.error('Google sign-in error:', error);
-            // For demo purposes, create a mock user
-            this.createMockUser('google');
+            this.showAuthError('Google sign-in failed: ' + error.message);
         }
     },
     
-    // Load Google Auth SDK
-    loadGoogleAuth() {
+    // Load Google Identity Services SDK
+    loadGoogleIdentityServices() {
         return new Promise((resolve, reject) => {
-            if (window.gapi && window.gapi.auth2) {
-                resolve(window.gapi.auth2.getAuthInstance());
+            if (window.google && window.google.accounts) {
+                resolve();
                 return;
             }
             
             const script = document.createElement('script');
-            script.src = 'https://apis.google.com/js/platform.js';
-            script.onload = () => {
-                window.gapi.load('auth2', () => {
-                    window.gapi.auth2.init({
-                        client_id: this.providers.google.clientId
-                    }).then(resolve, reject);
-                });
-            };
-            script.onerror = reject;
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
             document.head.appendChild(script);
         });
     },
