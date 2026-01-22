@@ -41,11 +41,18 @@ const Auth = {
     
     // Load provider configuration
     loadProviderConfig() {
+        // Load from ENV first (for production)
+        if (typeof ENV !== 'undefined') {
+            this.providers.google.clientId = ENV.GOOGLE_CLIENT_ID || '';
+            this.providers.microsoft.clientId = ENV.MICROSOFT_CLIENT_ID || '';
+        }
+        
+        // Override with localStorage config if exists
         const config = localStorage.getItem('courseCreator_authConfig');
         if (config) {
             const parsed = JSON.parse(config);
-            this.providers.google.clientId = parsed.googleClientId || '';
-            this.providers.microsoft.clientId = parsed.microsoftClientId || '';
+            if (parsed.googleClientId) this.providers.google.clientId = parsed.googleClientId;
+            if (parsed.microsoftClientId) this.providers.microsoft.clientId = parsed.microsoftClientId;
         }
     },
     
