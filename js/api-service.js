@@ -122,12 +122,13 @@ const ApiService = {
             }
             
             const content = data.candidates[0].content.parts[0].text;
-            console.log('📝 Parsing AI content...');
+            console.log('📝 Raw AI response:', content.substring(0, 500));
             
             // Parse JSON from response (handle potential markdown code blocks)
             const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [null, content];
             const parsed = JSON.parse(jsonMatch[1] || content);
             console.log('✅ Course content parsed successfully');
+            console.log('📊 Quiz questions:', parsed.quiz?.map(q => q.question));
             return parsed;
         } catch (error) {
             console.error('Gemini API Error:', error);
