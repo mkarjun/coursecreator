@@ -10,13 +10,19 @@
         .pending { border-left: 4px solid #ed8936; }
         button { padding: 10px 20px; background: #00d4aa; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
         pre { background: #0a0a1a; padding: 10px; border-radius: 5px; overflow: auto; max-height: 200px; }
+        input { padding: 8px; width: 300px; margin: 5px; }
     </style>
 </head>
 <body>
     <h1>🔧 API Test Page</h1>
     
+    <div class="test" id="configTest">
+        <h3>0. Config API (OAuth Client IDs)</h3>
+        <div id="configResult">Click button to test...</div>
+    </div>
+    
     <div class="test" id="envTest">
-        <h3>1. Environment Variables</h3>
+        <h3>1. Environment Variables (Local)</h3>
         <div id="envResult">Click button to test...</div>
     </div>
     
@@ -30,93 +36,202 @@
         <div id="youtubeResult">Click button to test...</div>
     </div>
     
+    <div class="test" id="proxyTest">
+        <h3>4. Proxy API Test (Production)</h3>
+        <div id="proxyResult">Click button to test...</div>
+    </div>
+
+    <div class="test">
+        <h3>🔧 Manual Test</h3>
+        <input type="text" id="apiUrl" placeholder="Enter API URL to test..." value="/api/config">
+        <button onclick="testManualApi()">Test URL</button>
+        <div id="manualResult"></div>
+    </div>
+    
     <button onclick="runAllTests()">🚀 Run All Tests</button>
     <button onclick="location.href='index.html'">← Back to App</button>
 
     <script src="js/env.js"></script>
     <script>
         async function runAllTests() {
+            // Test 0: Config API
+            await testConfigApi();
+            
             // Test 1: Environment Variables
-            const envDiv = document.getElementById('envTest');
-            const envResult = document.getElementById('envResult');
+            testEnvVars();
+            
+            // Test 2: Gemini API
+            await testGeminiApi();
+            
+            // Test 3: YouTube API
+            await testYoutubeApi();
+            
+            // Test 4: Proxy API
+            await testProxyApi();
+        }
+        
+        async function testConfigApi() {
+            const div = document.getElementById('configTest');
+            const result = document.getElementById('configResult');
+            result.innerHTML = '⏳ Testing /api/config...';
+            div.className = 'test pending';
+            
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const hasGoogle = data.googleClientId && data.googleClientId.length > 10;
+                    const hasMicrosoft = data.microsoftClientId && data.microsoftClientId.length > 10;
+                    
+                    result.innerHTML = `
+                        <p>${hasGoogle ? '✅' : '❌'} Google Client ID: ${hasGoogle ? data.googleClientId.substring(0, 20) + '...' : 'NOT SET'}</p>
+                        <p>${hasMicrosoft ? '✅' : '⚠️'} Microsoft Client ID: ${hasMicrosoft ? data.microsoftClientId.substring(0, 20) + '...' : 'Not configured'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    div.className = hasGoogle ? 'test success' : 'test error';
+                } else {
+                    result.innerHTML = `<p>❌ Config API Error</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    div.className = 'test error';
+                }
+            } catch (err) {
+                result.innerHTML = `<p>❌ Config API Error (may not work locally)</p><pre>${err.message}</pre>`;
+                div.className = 'test error';
+            }
+        }
+        
+        function testEnvVars() {
+            const div = document.getElementById('envTest');
+            const result = document.getElementById('envResult');
             
             if (typeof ENV !== 'undefined') {
-                envResult.innerHTML = `
+                result.innerHTML = `
                     <p>✅ ENV loaded successfully!</p>
                     <pre>
-GEMINI_API_KEY: ${ENV.GEMINI_API_KEY ? ENV.GEMINI_API_KEY.substring(0, 10) + '...' : '❌ NOT SET'}
-YOUTUBE_API_KEY: ${ENV.YOUTUBE_API_KEY ? ENV.YOUTUBE_API_KEY.substring(0, 10) + '...' : '❌ NOT SET'}
+GEMINI_API_KEY: ${ENV.GEMINI_API_KEY ? ENV.GEMINI_API_KEY.substring(0, 15) + '...' : '❌ NOT SET'}
+YOUTUBE_API_KEY: ${ENV.YOUTUBE_API_KEY ? ENV.YOUTUBE_API_KEY.substring(0, 15) + '...' : '❌ NOT SET'}
+GOOGLE_CLIENT_ID: ${ENV.GOOGLE_CLIENT_ID ? ENV.GOOGLE_CLIENT_ID.substring(0, 15) + '...' : '⚠️ Not set (use API)'}
                     </pre>
                 `;
-                envDiv.className = 'test success';
+                div.className = 'test success';
             } else {
-                envResult.innerHTML = '<p>❌ ENV not loaded! Check if env.js exists.</p>';
-                envDiv.className = 'test error';
+                result.innerHTML = '<p>❌ ENV not loaded! Check if env.js exists.</p>';
+                div.className = 'test error';
+            }
+        }
+        
+        async function testGeminiApi() {
+            const div = document.getElementById('geminiTest');
+            const result = document.getElementById('geminiResult');
+            result.innerHTML = '⏳ Testing Gemini API...';
+            div.className = 'test pending';
+            
+            const apiKey = typeof ENV !== 'undefined' ? ENV.GEMINI_API_KEY : null;
+            if (!apiKey) {
+                result.innerHTML = '<p>⚠️ No Gemini API key in ENV</p>';
+                div.className = 'test error';
                 return;
             }
             
-            // Test 2: Gemini API
-            const geminiDiv = document.getElementById('geminiTest');
-            const geminiResult = document.getElementById('geminiResult');
-            geminiResult.innerHTML = '⏳ Testing Gemini API...';
-            geminiDiv.className = 'test pending';
-            
             try {
-                const geminiResponse = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${ENV.GEMINI_API_KEY}`,
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: 'Say "Hello, API works!" in exactly 5 words.' }] }]
+                            contents: [{ parts: [{ text: 'Say "API works!" in 3 words.' }] }]
                         })
                     }
                 );
                 
-                const geminiData = await geminiResponse.json();
+                const data = await response.json();
                 
-                if (geminiResponse.ok) {
-                    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-                    geminiResult.innerHTML = `<p>✅ Gemini API works!</p><pre>Response: ${text}</pre>`;
-                    geminiDiv.className = 'test success';
+                if (response.ok) {
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+                    result.innerHTML = `<p>✅ Gemini API works!</p><pre>Response: ${text}</pre>`;
+                    div.className = 'test success';
                 } else {
-                    geminiResult.innerHTML = `<p>❌ Gemini API Error</p><pre>${JSON.stringify(geminiData, null, 2)}</pre>`;
-                    geminiDiv.className = 'test error';
+                    result.innerHTML = `<p>❌ Gemini API Error</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    div.className = 'test error';
                 }
             } catch (err) {
-                geminiResult.innerHTML = `<p>❌ Gemini API Error</p><pre>${err.message}</pre>`;
-                geminiDiv.className = 'test error';
+                result.innerHTML = `<p>❌ Gemini API Error</p><pre>${err.message}</pre>`;
+                div.className = 'test error';
+            }
+        }
+        
+        async function testYoutubeApi() {
+            const div = document.getElementById('youtubeTest');
+            const result = document.getElementById('youtubeResult');
+            result.innerHTML = '⏳ Testing YouTube API...';
+            div.className = 'test pending';
+            
+            const apiKey = typeof ENV !== 'undefined' ? ENV.YOUTUBE_API_KEY : null;
+            if (!apiKey) {
+                result.innerHTML = '<p>⚠️ No YouTube API key in ENV</p>';
+                div.className = 'test error';
+                return;
             }
             
-            // Test 3: YouTube API
-            const youtubeDiv = document.getElementById('youtubeTest');
-            const youtubeResult = document.getElementById('youtubeResult');
-            youtubeResult.innerHTML = '⏳ Testing YouTube API...';
-            youtubeDiv.className = 'test pending';
-            
             try {
-                const ytResponse = await fetch(
-                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=python+tutorial&type=video&maxResults=1&key=${ENV.YOUTUBE_API_KEY}`
+                const response = await fetch(
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&type=video&maxResults=1&key=${apiKey}`
                 );
+                const data = await response.json();
                 
-                const ytData = await ytResponse.json();
-                
-                if (ytResponse.ok && ytData.items?.length > 0) {
-                    const video = ytData.items[0];
-                    youtubeResult.innerHTML = `
-                        <p>✅ YouTube API works!</p>
-                        <pre>Found: ${video.snippet.title}
-Channel: ${video.snippet.channelTitle}
-Video ID: ${video.id.videoId}</pre>
-                    `;
-                    youtubeDiv.className = 'test success';
+                if (response.ok && data.items?.length > 0) {
+                    result.innerHTML = `<p>✅ YouTube API works!</p><pre>Found: ${data.items[0].snippet.title}</pre>`;
+                    div.className = 'test success';
                 } else {
-                    youtubeResult.innerHTML = `<p>❌ YouTube API Error</p><pre>${JSON.stringify(ytData, null, 2)}</pre>`;
-                    youtubeDiv.className = 'test error';
+                    result.innerHTML = `<p>❌ YouTube API Error</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    div.className = 'test error';
                 }
             } catch (err) {
-                youtubeResult.innerHTML = `<p>❌ YouTube API Error</p><pre>${err.message}</pre>`;
-                youtubeDiv.className = 'test error';
+                result.innerHTML = `<p>❌ YouTube API Error</p><pre>${err.message}</pre>`;
+                div.className = 'test error';
+            }
+        }
+        
+        async function testProxyApi() {
+            const div = document.getElementById('proxyTest');
+            const result = document.getElementById('proxyResult');
+            result.innerHTML = '⏳ Testing /api/generate proxy...';
+            div.className = 'test pending';
+            
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: 'Say "Proxy works!" in 3 words.' })
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.candidates) {
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+                    result.innerHTML = `<p>✅ Proxy API works!</p><pre>Response: ${text}</pre>`;
+                    div.className = 'test success';
+                } else {
+                    result.innerHTML = `<p>❌ Proxy API Error</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    div.className = 'test error';
+                }
+            } catch (err) {
+                result.innerHTML = `<p>❌ Proxy API Error (may not work locally)</p><pre>${err.message}</pre>`;
+                div.className = 'test error';
+            }
+        }
+        
+        async function testManualApi() {
+            const url = document.getElementById('apiUrl').value;
+            const result = document.getElementById('manualResult');
+            result.innerHTML = '⏳ Testing...';
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                result.innerHTML = `<p>Status: ${response.status}</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (err) {
+                result.innerHTML = `<p>Error:</p><pre>${err.message}</pre>`;
             }
         }
         
