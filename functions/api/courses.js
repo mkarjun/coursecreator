@@ -1,5 +1,5 @@
 // Cloudflare Function: Course Management API
-// Handles course CRUD operations
+// Handles course CRUD operations and progress tracking
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -12,6 +12,11 @@ export async function onRequestPost(context) {
 
     try {
         const { action, data } = await request.json();
+
+        // Validate database binding
+        if (!env.DB) {
+            return jsonResponse({ error: 'Database not configured' }, 500);
+        }
 
         switch (action) {
             case 'create':
@@ -26,6 +31,12 @@ export async function onRequestPost(context) {
                 return await updateProgress(env.DB, data);
             case 'getProgress':
                 return await getProgress(env.DB, data.userId, data.courseId);
+            case 'saveVideoTimestamp':
+                return await saveVideoTimestamp(env.DB, data);
+            case 'getVideoTimestamps':
+                return await getVideoTimestamps(env.DB, data.userId, data.courseId);
+            case 'getAllUserData':
+                return await getAllUserData(env.DB, data.userId);
             default:
                 return jsonResponse({ error: 'Invalid action' }, 400);
         }
@@ -164,13 +175,128 @@ async function getProgress(db, userId, courseId) {
         return jsonResponse({ error: 'Progress not found' }, 404);
     }
     
+    // Also get video timestamps for this course
+    const timestamps = await db.prepare(
+        'SELECT video_id, timestamp_seconds, duration_seconds, completed FROM video_timestamps WHERE user_id = ? AND course_id = ?'
+    ).bind(userId, courseId).all();
+    
     return jsonResponse({
         percentage: progress.percentage,
         completedLessons: JSON.parse(progress.completed_lessons || '[]'),
         watchedVideos: JSON.parse(progress.watched_videos || '[]'),
         introCompleted: !!progress.intro_completed,
         quizCompleted: !!progress.quiz_completed,
-        quizScore: progress.quiz_score
+        quizScore: progress.quiz_score,
+        videoTimestamps: (timestamps.results || []).reduce((acc, t) => {
+            acc[t.video_id] = {
+                timestamp: t.timestamp_seconds,
+                duration: t.duration_seconds,
+                completed: !!t.completed
+            };
+            return acc;
+        }, {})
+    });
+}
+
+// Save video timestamp (where user left off)
+async function saveVideoTimestamp(db, data) {
+    const { userId, courseId, videoId, timestamp, duration, completed } = data;
+    
+    await db.prepare(`
+        INSERT INTO video_timestamps (user_id, course_id, video_id, timestamp_seconds, duration_seconds, completed, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id, course_id, video_id) DO UPDATE SET
+            timestamp_seconds = excluded.timestamp_seconds,
+            duration_seconds = excluded.duration_seconds,
+            completed = excluded.completed,
+            updated_at = CURRENT_TIMESTAMP
+    `).bind(userId, courseId, videoId, timestamp || 0, duration || 0, completed ? 1 : 0).run();
+    
+    return jsonResponse({ success: true });
+}
+
+// Get all video timestamps for a course
+async function getVideoTimestamps(db, userId, courseId) {
+    const timestamps = await db.prepare(
+        'SELECT video_id, timestamp_seconds, duration_seconds, completed FROM video_timestamps WHERE user_id = ? AND course_id = ?'
+    ).bind(userId, courseId).all();
+    
+    return jsonResponse({
+        timestamps: (timestamps.results || []).reduce((acc, t) => {
+            acc[t.video_id] = {
+                timestamp: t.timestamp_seconds,
+                duration: t.duration_seconds,
+                completed: !!t.completed
+            };
+            return acc;
+        }, {})
+    });
+}
+
+// Get all user data (for restoring session on login)
+async function getAllUserData(db, userId) {
+    // Get all courses with their progress
+    const courses = await db.prepare(`
+        SELECT c.*, p.percentage, p.completed_lessons, p.watched_videos, 
+               p.intro_completed, p.quiz_completed, p.quiz_score
+        FROM courses c
+        LEFT JOIN progress p ON c.id = p.course_id AND p.user_id = c.user_id
+        WHERE c.user_id = ?
+        ORDER BY c.last_accessed DESC
+    `).bind(userId).all();
+    
+    // Get all video timestamps
+    const allTimestamps = await db.prepare(
+        'SELECT course_id, video_id, timestamp_seconds, duration_seconds, completed FROM video_timestamps WHERE user_id = ?'
+    ).bind(userId).all();
+    
+    // Group timestamps by course
+    const timestampsByCourse = (allTimestamps.results || []).reduce((acc, t) => {
+        if (!acc[t.course_id]) acc[t.course_id] = {};
+        acc[t.course_id][t.video_id] = {
+            timestamp: t.timestamp_seconds,
+            duration: t.duration_seconds,
+            completed: !!t.completed
+        };
+        return acc;
+    }, {});
+    
+    // Get badges
+    const badges = await db.prepare('SELECT badge_id, earned_at FROM user_badges WHERE user_id = ?')
+        .bind(userId).all();
+    
+    // Get streak
+    const streak = await db.prepare('SELECT * FROM streaks WHERE user_id = ?')
+        .bind(userId).first();
+    
+    // Transform courses to app format
+    const formattedCourses = (courses.results || []).map(c => ({
+        id: c.id,
+        topic: c.topic,
+        title: c.title,
+        content: JSON.parse(c.content),
+        difficulty: c.difficulty,
+        createdAt: c.created_at,
+        lastAccessed: c.last_accessed,
+        progress: {
+            percentage: c.percentage || 0,
+            completedLessons: JSON.parse(c.completed_lessons || '[]'),
+            watchedVideos: JSON.parse(c.watched_videos || '[]'),
+            introCompleted: !!c.intro_completed,
+            quizCompleted: !!c.quiz_completed,
+            quizScore: c.quiz_score
+        },
+        videoTimestamps: timestampsByCourse[c.id] || {}
+    }));
+    
+    return jsonResponse({
+        courses: formattedCourses,
+        badges: (badges.results || []).map(b => ({ id: b.badge_id, earnedAt: b.earned_at })),
+        streak: {
+            current: streak?.current_streak || 0,
+            longest: streak?.longest_streak || 0,
+            lastActivity: streak?.last_activity_date
+        }
     });
 }
 

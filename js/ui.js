@@ -303,7 +303,7 @@ const UI = {
         }
     },
     
-    // Open video
+    // Open video - now opens in a modal with embedded player for timestamp tracking
     openVideo(videoId, title) {
         // Check if it's a demo video
         if (videoId.startsWith('demo_')) {
@@ -311,16 +311,119 @@ const UI = {
             return;
         }
         
+        // Get existing timestamp if any
+        const course = CourseGenerator.getCurrentCourse();
+        let startTime = 0;
+        
+        if (course && course.videoTimestamps && course.videoTimestamps[videoId]) {
+            startTime = course.videoTimestamps[videoId].timestamp || 0;
+        }
+        
+        // Show video modal with embedded player
+        this.showVideoModal(videoId, title, startTime);
+    },
+    
+    // Show video in embedded modal for timestamp tracking
+    showVideoModal(videoId, title, startTime = 0) {
+        // Create modal if it doesn't exist
+        let modal = document.getElementById('videoModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'videoModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content video-modal-content">
+                    <div class="modal-header">
+                        <h3 id="videoModalTitle"></h3>
+                        <button class="close-btn" onclick="UI.closeVideoModal()">&times;</button>
+                    </div>
+                    <div class="video-embed-container">
+                        <iframe id="videoModalIframe" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="video-modal-actions">
+                        <button class="btn-secondary" onclick="UI.openVideoExternal()">
+                            <i class="fab fa-youtube"></i> Open in YouTube
+                        </button>
+                        <button class="btn-primary" onclick="UI.markVideoComplete()">
+                            <i class="fas fa-check"></i> Mark as Complete
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // Store current video info
+        this.currentVideoId = videoId;
+        this.currentVideoTitle = title;
+        
+        // Set title and iframe src with start time
+        document.getElementById('videoModalTitle').textContent = title;
+        const iframe = document.getElementById('videoModalIframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?start=${Math.floor(startTime)}&autoplay=1&enablejsapi=1`;
+        
+        modal.classList.add('active');
+        
         // Mark as watched
         CourseGenerator.markVideoWatched(videoId);
-        
-        // Open in new tab
-        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
         
         // Refresh video card to show watched status
         const course = CourseGenerator.getCurrentCourse();
         if (course) {
             this.renderLessons(course);
+        }
+    },
+    
+    // Close video modal
+    closeVideoModal() {
+        const modal = document.getElementById('videoModal');
+        const iframe = document.getElementById('videoModalIframe');
+        
+        if (modal) {
+            modal.classList.remove('active');
+            iframe.src = ''; // Stop video
+        }
+        
+        this.currentVideoId = null;
+        this.currentVideoTitle = null;
+    },
+    
+    // Open current video in YouTube
+    openVideoExternal() {
+        if (this.currentVideoId) {
+            window.open(`https://www.youtube.com/watch?v=${this.currentVideoId}`, '_blank');
+        }
+    },
+    
+    // Mark current video as complete
+    markVideoComplete() {
+        if (this.currentVideoId) {
+            const course = CourseGenerator.getCurrentCourse();
+            if (course) {
+                // Save as completed
+                if (!course.videoTimestamps) course.videoTimestamps = {};
+                course.videoTimestamps[this.currentVideoId] = {
+                    timestamp: 0,
+                    duration: 0,
+                    completed: true
+                };
+                Storage.saveCourse(course);
+                
+                // Also sync to database
+                if (window.DatabaseService && !DatabaseService.isGuestMode()) {
+                    DatabaseService.saveVideoTimestamp(
+                        course.id, 
+                        this.currentVideoId, 
+                        0, 0, true
+                    ).catch(console.warn);
+                }
+            }
+            this.closeVideoModal();
+            this.showBadgeNotification({ name: 'Video Completed!', icon: '🎬' });
         }
     },
     

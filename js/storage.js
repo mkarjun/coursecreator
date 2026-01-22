@@ -1,27 +1,31 @@
 // Storage Module - Handles all local storage operations
+// Guest mode: Uses sessionStorage (clears on tab close/reload)
+// Logged in: Uses localStorage + D1 database sync
 
 const Storage = {
-    // Check if storage is allowed (not guest mode)
-    canSave() {
-        // If Auth is not initialized yet, allow saving
-        if (typeof Auth === 'undefined') return true;
-        // Allow saving only if user is authenticated (not guest)
-        return !Auth.isGuest();
+    // Check if user is a guest
+    isGuestMode() {
+        if (typeof Auth === 'undefined') return false;
+        return Auth.isGuest();
+    },
+    
+    // Get the appropriate storage based on user mode
+    getStorage() {
+        return this.isGuestMode() ? sessionStorage : localStorage;
     },
     
     // Get all saved courses
     getCourses() {
-        const data = localStorage.getItem(CONFIG.STORAGE_KEYS.COURSES);
+        const storage = this.getStorage();
+        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
+        const data = storage.getItem(key);
         return data ? JSON.parse(data) : [];
     },
     
     // Save a new course
     saveCourse(course) {
-        // Don't save for guest users
-        if (!this.canSave()) {
-            console.log('📝 Guest mode: Course progress not saved');
-            return course;
-        }
+        const storage = this.getStorage();
+        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
         
         const courses = this.getCourses();
         const existingIndex = courses.findIndex(c => c.id === course.id);
@@ -32,8 +36,31 @@ const Storage = {
             courses.unshift(course);
         }
         
-        localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(courses));
+        // Limit to 5 courses for guests
+        if (this.isGuestMode() && courses.length > 5) {
+            courses.pop();
+        }
+        
+        storage.setItem(key, JSON.stringify(courses));
+        
+        // Sync to D1 database for logged-in users
+        if (!this.isGuestMode() && window.DatabaseService) {
+            this.syncCourseToDatabase(course);
+        }
+        
         return course;
+    },
+    
+    // Sync course to database (async, fire and forget)
+    async syncCourseToDatabase(course) {
+        try {
+            await DatabaseService.saveCourse(course);
+            if (course.progress) {
+                await DatabaseService.updateProgress(course.id, course.progress);
+            }
+        } catch (error) {
+            console.warn('Failed to sync course to database:', error);
+        }
     },
     
     // Get a specific course by ID
@@ -44,18 +71,23 @@ const Storage = {
     
     // Delete a course
     deleteCourse(courseId) {
+        const storage = this.getStorage();
+        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
+        
         const courses = this.getCourses();
         const filtered = courses.filter(c => c.id !== courseId);
-        localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(filtered));
+        storage.setItem(key, JSON.stringify(filtered));
+        
+        // Sync deletion to database for logged-in users
+        if (!this.isGuestMode() && window.DatabaseService) {
+            DatabaseService.deleteCourse(courseId).catch(console.warn);
+        }
     },
     
     // Update course progress
     updateCourseProgress(courseId, progress) {
-        // Don't save progress for guest users
-        if (!this.canSave()) {
-            console.log('📝 Guest mode: Progress not saved');
-            return null;
-        }
+        const storage = this.getStorage();
+        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
         
         const courses = this.getCourses();
         const course = courses.find(c => c.id === courseId);
@@ -63,7 +95,12 @@ const Storage = {
         if (course) {
             course.progress = { ...course.progress, ...progress };
             course.lastAccessed = new Date().toISOString();
-            localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(courses));
+            storage.setItem(key, JSON.stringify(courses));
+            
+            // Sync to database for logged-in users
+            if (!this.isGuestMode() && window.DatabaseService) {
+                DatabaseService.updateProgress(courseId, course.progress).catch(console.warn);
+            }
         }
         
         return course;

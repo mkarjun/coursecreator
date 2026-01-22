@@ -331,6 +331,15 @@ const Auth = {
                     }
                 }
                 
+                // Restore user's existing data from database
+                console.log('🔄 Restoring user data from database...');
+                await DatabaseService.restoreUserData();
+                
+                // Refresh UI to show restored courses
+                if (typeof UI !== 'undefined' && UI.renderMyCourses) {
+                    UI.renderMyCourses();
+                }
+                
                 console.log('✅ User synced to database:', result);
             } catch (error) {
                 console.error('❌ Failed to sync user to database:', error);

@@ -209,6 +209,79 @@ const DatabaseService = {
         return response.json();
     },
 
+    // ============ VIDEO TIMESTAMP OPERATIONS ============
+
+    // Save video timestamp (where user left off)
+    async saveVideoTimestamp(courseId, videoId, timestamp, duration, completed = false) {
+        if (this.isGuestMode()) {
+            // Store in sessionStorage for guests
+            const key = `guestVideoTimestamps_${courseId}`;
+            const timestamps = JSON.parse(sessionStorage.getItem(key) || '{}');
+            timestamps[videoId] = { timestamp, duration, completed };
+            sessionStorage.setItem(key, JSON.stringify(timestamps));
+            return { success: true };
+        }
+
+        const response = await fetch('/api/courses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'saveVideoTimestamp',
+                data: {
+                    userId: this.currentUser.id,
+                    courseId,
+                    videoId,
+                    timestamp,
+                    duration,
+                    completed
+                }
+            })
+        });
+        return response.json();
+    },
+
+    // Get video timestamps for a course
+    async getVideoTimestamps(courseId) {
+        if (this.isGuestMode()) {
+            const key = `guestVideoTimestamps_${courseId}`;
+            return { timestamps: JSON.parse(sessionStorage.getItem(key) || '{}') };
+        }
+
+        const response = await fetch('/api/courses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'getVideoTimestamps',
+                data: { userId: this.currentUser.id, courseId }
+            })
+        });
+        return response.json();
+    },
+
+    // Get all user data (for restoring session on login)
+    async getAllUserData() {
+        if (this.isGuestMode()) {
+            return {
+                courses: this.getGuestCourses(),
+                badges: JSON.parse(sessionStorage.getItem('guestBadges') || '[]'),
+                streak: {
+                    current: parseInt(sessionStorage.getItem('guestStreak') || '0'),
+                    longest: parseInt(sessionStorage.getItem('guestLongestStreak') || '0')
+                }
+            };
+        }
+
+        const response = await fetch('/api/courses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'getAllUserData',
+                data: { userId: this.currentUser.id }
+            })
+        });
+        return response.json();
+    },
+
     // ============ GUEST HELPERS ============
 
     getGuestCourses() {
@@ -222,6 +295,12 @@ const DatabaseService = {
         sessionStorage.removeItem('guestBadges');
         sessionStorage.removeItem('guestStreak');
         sessionStorage.removeItem('guestLongestStreak');
+        // Also clear any video timestamps
+        Object.keys(sessionStorage).forEach(key => {
+            if (key.startsWith('guestVideoTimestamps_')) {
+                sessionStorage.removeItem(key);
+            }
+        });
     },
 
     // ============ MIGRATION ============
@@ -240,6 +319,13 @@ const DatabaseService = {
                 if (course.progress) {
                     await this.updateProgress(course.id, course.progress);
                 }
+                
+                // Migrate video timestamps
+                const key = `guestVideoTimestamps_${course.id}`;
+                const timestamps = JSON.parse(sessionStorage.getItem(key) || '{}');
+                for (const [videoId, data] of Object.entries(timestamps)) {
+                    await this.saveVideoTimestamp(course.id, videoId, data.timestamp, data.duration, data.completed);
+                }
             } catch (error) {
                 console.error('Migration error for course:', course.id, error);
             }
@@ -248,6 +334,50 @@ const DatabaseService = {
         // Clear guest data after migration
         this.clearGuestData();
         console.log('✅ Migration complete');
+    },
+
+    // Restore user data from database to local storage on login
+    async restoreUserData() {
+        try {
+            const data = await this.getAllUserData();
+            
+            if (data.courses && data.courses.length > 0) {
+                // Restore courses to localStorage
+                const formattedCourses = data.courses.map(c => ({
+                    id: c.id,
+                    topic: c.topic,
+                    title: c.title,
+                    introduction: c.content?.introduction,
+                    lessons: c.content?.lessons,
+                    quiz: c.content?.quiz,
+                    notes: c.content?.notes,
+                    difficulty: c.difficulty,
+                    progress: c.progress,
+                    videoTimestamps: c.videoTimestamps,
+                    createdAt: c.createdAt,
+                    lastAccessed: c.lastAccessed
+                }));
+                
+                localStorage.setItem('coursecreator_courses', JSON.stringify(formattedCourses));
+                console.log(`✅ Restored ${formattedCourses.length} courses from database`);
+            }
+            
+            if (data.badges && data.badges.length > 0) {
+                localStorage.setItem('coursecreator_badges', JSON.stringify(data.badges.map(b => b.id)));
+            }
+            
+            if (data.streak) {
+                const settings = JSON.parse(localStorage.getItem('coursecreator_settings') || '{}');
+                settings.currentStreak = data.streak.current;
+                settings.longestStreak = data.streak.longest;
+                localStorage.setItem('coursecreator_settings', JSON.stringify(settings));
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Failed to restore user data:', error);
+            return null;
+        }
     }
 };
 
