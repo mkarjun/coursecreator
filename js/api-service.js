@@ -1,109 +1,117 @@
 // API Service Module - Handles all external API calls
+// Uses server-side proxy to protect API keys
 
 const ApiService = {
-    // Search YouTube videos
+    // Detect if running on production (Cloudflare) or local
+    isProduction() {
+        return window.location.hostname !== 'localhost' && 
+               window.location.hostname !== '127.0.0.1' &&
+               !window.location.hostname.includes('192.168.');
+    },
+
+    // Search YouTube videos via proxy
     async searchYouTubeVideos(query, maxResults = 10) {
-        if (!CONFIG.YOUTUBE_API_KEY) {
-            console.warn('YouTube API key not set, using demo mode');
-            return this.getDemoVideos(query);
-        }
-        
         try {
-            const params = new URLSearchParams({
-                part: 'snippet',
-                q: query,
-                type: 'video',
-                maxResults: maxResults,
-                order: 'relevance',
-                videoEmbeddable: 'true',
-                key: CONFIG.YOUTUBE_API_KEY
-            });
+            let data;
             
-            const response = await fetch(`${CONFIG.YOUTUBE_SEARCH_URL}?${params}`);
-            
-            if (!response.ok) {
-                throw new Error(`YouTube API error: ${response.status}`);
+            if (this.isProduction()) {
+                // Use secure proxy in production
+                const response = await fetch(`/api/youtube?q=${encodeURIComponent(query)}&maxResults=${maxResults}`);
+                
+                if (!response.ok) {
+                    throw new Error(`YouTube API error: ${response.status}`);
+                }
+                data = await response.json();
+            } else {
+                // Local development - use direct API with local keys
+                if (!CONFIG.YOUTUBE_API_KEY) {
+                    console.warn('YouTube API key not set, using demo mode');
+                    return this.getDemoVideos(query);
+                }
+                
+                const params = new URLSearchParams({
+                    part: 'snippet',
+                    q: query,
+                    type: 'video',
+                    maxResults: maxResults,
+                    order: 'relevance',
+                    videoEmbeddable: 'true',
+                    key: CONFIG.YOUTUBE_API_KEY
+                });
+                
+                const response = await fetch(`${CONFIG.YOUTUBE_SEARCH_URL}?${params}`);
+                if (!response.ok) {
+                    throw new Error(`YouTube API error: ${response.status}`);
+                }
+                data = await response.json();
             }
             
-            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error.message || 'YouTube API error');
+            }
             
-            // Get video details for duration and view count
-            const videoIds = data.items.map(item => item.id.videoId).join(',');
-            const details = await this.getVideoDetails(videoIds);
-            
-            return data.items.map(item => {
-                const detail = details.find(d => d.id === item.id.videoId);
-                return {
-                    id: item.id.videoId,
-                    title: item.snippet.title,
-                    description: item.snippet.description,
-                    thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
-                    channelTitle: item.snippet.channelTitle,
-                    publishedAt: item.snippet.publishedAt,
-                    duration: detail?.contentDetails?.duration || 'N/A',
-                    viewCount: detail?.statistics?.viewCount || '0'
-                };
-            });
+            return data.items.map(item => ({
+                id: item.id.videoId,
+                title: item.snippet.title,
+                description: item.snippet.description,
+                thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
+                channelTitle: item.snippet.channelTitle,
+                publishedAt: item.snippet.publishedAt,
+                duration: 'N/A',
+                viewCount: '0'
+            }));
         } catch (error) {
             console.error('YouTube API Error:', error);
             return this.getDemoVideos(query);
         }
     },
     
-    // Get video details (duration, views)
-    async getVideoDetails(videoIds) {
-        if (!CONFIG.YOUTUBE_API_KEY || !videoIds) return [];
-        
-        try {
-            const params = new URLSearchParams({
-                part: 'contentDetails,statistics',
-                id: videoIds,
-                key: CONFIG.YOUTUBE_API_KEY
-            });
-            
-            const response = await fetch(`${CONFIG.YOUTUBE_VIDEOS_URL}?${params}`);
-            const data = await response.json();
-            return data.items || [];
-        } catch (error) {
-            console.error('Error fetching video details:', error);
-            return [];
-        }
-    },
-    
-    // Generate course content using Google Gemini
+    // Generate course content using Gemini via proxy
     async generateCourseContent(topic) {
-        if (!CONFIG.GEMINI_API_KEY) {
-            console.warn('Gemini API key not set, using demo mode');
-            return this.getDemoCourseContent(topic);
-        }
-        
         try {
-            // Use optimized prompt from config
             const prompt = CONFIG.COURSE_PROMPT.replace('{{TOPIC}}', topic);
-
-            const response = await fetch(`${CONFIG.GEMINI_API_URL}?key=${CONFIG.GEMINI_API_KEY}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 4096,
-                        responseMimeType: "application/json"
-                    }
-                })
-            });
+            let data;
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            if (this.isProduction()) {
+                // Use secure proxy in production
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Gemini API error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+                }
+                data = await response.json();
+            } else {
+                // Local development - use direct API with local keys
+                if (!CONFIG.GEMINI_API_KEY) {
+                    console.warn('Gemini API key not set, using demo mode');
+                    return this.getDemoCourseContent(topic);
+                }
+                
+                const response = await fetch(`${CONFIG.GEMINI_API_URL}?key=${CONFIG.GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 4096,
+                            responseMimeType: "application/json"
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+                }
+                data = await response.json();
             }
             
-            const data = await response.json();
             const content = data.candidates[0].content.parts[0].text;
             
             // Parse JSON from response (handle potential markdown code blocks)
