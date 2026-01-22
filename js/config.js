@@ -35,29 +35,29 @@ Requirements:
 - Valid JSON only, no extra text`,
 
     // Separate Quiz Prompt - Strict factual questions only
-    QUIZ_PROMPT: `Generate 5 quiz questions that test FACTUAL knowledge about "{{TOPIC}}".
+    QUIZ_PROMPT: `You are a quiz generator. Generate exactly 5 multiple choice questions that test FACTUAL KNOWLEDGE about {{TOPIC}}.
 
-MANDATORY RULES - FOLLOW EXACTLY:
-1. Every question must have ONE objectively correct answer that can be verified
-2. Questions must test SPECIFIC FACTS about {{TOPIC}}:
-   - Definitions, syntax, terminology
-   - Numbers, dates, measurements  
-   - Names of concepts, components, tools
-   - How things work mechanically/technically
-3. NEVER ask about opinions, "best practices", or "why is X important"
-4. NEVER use phrases like "key challenge", "most effective approach", "foundational principles"
+CRITICAL RULES - VIOLATION MEANS FAILURE:
+❌ NEVER ask "Why is X important?" 
+❌ NEVER ask "What should you do after..."
+❌ NEVER ask about "foundational principles"
+❌ NEVER ask about "best approach" or "most effective"
+❌ NEVER ask opinion-based questions
 
-Return JSON:
-{"quiz":[{"question":"Question?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why A is correct"}]}
+✅ ONLY ask questions with ONE verifiable correct answer
+✅ Test specific facts: syntax, definitions, numbers, terminology
 
-EXAMPLES FOR {{TOPIC}}:
-If Python: "What symbol starts a comment in Python?" → #
-If Guitar: "What note is the thickest string tuned to?" → E
-If Cooking: "At what temperature (°F) does water boil?" → 212
-If JavaScript: "Which method adds an element to the end of an array?" → push()
-If Photography: "What does ISO control?" → Light sensitivity
+For {{TOPIC}}, ask questions like:
+- What is the correct syntax for X?
+- What does Y function/method do?
+- What is the output of Z code?
+- What data type does A return?
+- What keyword is used for B?
 
-Generate 5 similar FACTUAL questions for {{TOPIC}}.`,
+Return ONLY this JSON (no markdown):
+{"quiz":[{"question":"Factual question?","options":["Correct","Wrong1","Wrong2","Wrong3"],"correctIndex":0,"explanation":"Why correct"}]}
+
+Generate 5 factual {{TOPIC}} questions NOW:`,
     
     // Badge Definitions
     BADGES: [
