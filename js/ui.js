@@ -17,6 +17,7 @@ const UI = {
     cacheElements() {
         this.elements = {
             sidebar: document.getElementById('sidebar'),
+            sidebarOverlay: document.getElementById('sidebarOverlay'),
             menuToggle: document.getElementById('menuToggle'),
             themeToggle: document.getElementById('themeToggle'),
             topicInput: document.getElementById('topicInput'),
@@ -68,11 +69,30 @@ const UI = {
         };
     },
     
+    // Toggle sidebar for mobile
+    toggleSidebar() {
+        this.elements.sidebar.classList.toggle('active');
+        this.elements.sidebarOverlay?.classList.toggle('active');
+        document.body.style.overflow = this.elements.sidebar.classList.contains('active') ? 'hidden' : '';
+    },
+    
+    // Close sidebar
+    closeSidebar() {
+        this.elements.sidebar.classList.remove('active');
+        this.elements.sidebarOverlay?.classList.remove('active');
+        document.body.style.overflow = '';
+    },
+    
     // Bind event listeners
     bindEvents() {
         // Menu toggle
         this.elements.menuToggle?.addEventListener('click', () => {
-            this.elements.sidebar.classList.toggle('active');
+            this.toggleSidebar();
+        });
+        
+        // Overlay click closes sidebar
+        this.elements.sidebarOverlay?.addEventListener('click', () => {
+            this.closeSidebar();
         });
         
         // Theme toggle
@@ -96,6 +116,10 @@ const UI = {
         document.querySelectorAll('.sidebar-menu li').forEach(item => {
             item.addEventListener('click', () => {
                 this.navigateToPage(item.dataset.page);
+                // Close sidebar on mobile after navigation
+                if (window.innerWidth <= 768) {
+                    this.closeSidebar();
+                }
             });
         });
         
