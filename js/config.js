@@ -23,22 +23,30 @@ const CONFIG = {
     },
     
     // Optimized Master Prompt - Topic-adaptive, unique content
-    COURSE_PROMPT: `You are creating a course about "{{TOPIC}}". Generate JSON.
+    COURSE_PROMPT: `Create educational course JSON for "{{TOPIC}}".
 
-QUIZ REQUIREMENTS - CRITICAL:
-- Questions must test FACTUAL knowledge OF {{TOPIC}} itself
-- For "Python": ask about syntax, functions, data types (e.g., "What does print() do?")
-- For "Quantum Computing": ask about qubits, superposition, gates (e.g., "What is a qubit?")
-- NEVER ask meta questions like "Why study X?" or "What's the best way to learn?"
-- Each question tests a SPECIFIC CONCEPT from the lessons
+QUIZ RULES - YOU MUST FOLLOW:
+Generate 5 questions that test KNOWLEDGE OF {{TOPIC}} CONCEPTS.
 
-JSON structure:
-{"difficulty":"beginner|intermediate|advanced","introduction":"150-200 words explaining what {{TOPIC}} is and why it matters","lessons":[{"title":"Lesson title","description":"200-300 words teaching concepts","keyPoints":["key concept 1","key concept 2","key concept 3"]}],"quiz":[{"question":"Question testing a specific {{TOPIC}} fact/concept","options":["correct answer","wrong1","wrong2","wrong3"],"correctIndex":0,"explanation":"Why this is correct"}],"notes":"# {{TOPIC}} Notes\\n500-800 words with ## sections"}
+GOOD quiz examples:
+- Topic "Python": "What data type does range() return?" / "Which keyword defines a function?"
+- Topic "Guitar": "How many strings does a standard guitar have?" / "What is an open chord?"
+- Topic "Quantum Computing": "What is superposition?" / "What can a qubit represent?"
 
-Requirements:
-- 4 lessons progressing from basics to advanced
-- 5 quiz questions: test definitions, concepts, facts FROM the lesson content
-- Return valid JSON only`,
+BAD quiz (NEVER generate these):
+- "Why is X important?" 
+- "What's the best way to learn X?"
+- "Why study foundational principles?"
+- "What should you do after this course?"
+
+Each question MUST have ONE factual correct answer about {{TOPIC}}.
+
+JSON:
+{"difficulty":"beginner|intermediate|advanced","introduction":"150-200 words about {{TOPIC}}","lessons":[{"title":"Title","description":"200-300 words","keyPoints":["point1","point2","point3"]}],"quiz":[{"question":"Factual {{TOPIC}} question","options":["correct","wrong","wrong","wrong"],"correctIndex":0,"explanation":"Why correct"}],"notes":"# Notes\\n500-800 words markdown"}
+
+- 4 lessons from basics to advanced
+- 5 quiz questions testing facts/concepts/definitions
+- Valid JSON only`,
     
     // Badge Definitions
     BADGES: [
