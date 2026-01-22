@@ -51,23 +51,32 @@
     <button onclick="runAllTests()">🚀 Run All Tests</button>
     <button onclick="location.href='index.html'">← Back to App</button>
 
-    <script src="js/env.js"></script>
+    <script>
+        // ENV may not exist on production (gitignored)
+        window.ENV = window.ENV || {};
+    </script>
+    <script src="js/env.js" onerror="console.log('env.js not found - using production APIs')"></script>
     <script>
         async function runAllTests() {
-            // Test 0: Config API
-            await testConfigApi();
-            
-            // Test 1: Environment Variables
-            testEnvVars();
-            
-            // Test 2: Gemini API
-            await testGeminiApi();
-            
-            // Test 3: YouTube API
-            await testYoutubeApi();
-            
-            // Test 4: Proxy API
-            await testProxyApi();
+            console.log('Running all tests...');
+            try {
+                // Test 0: Config API
+                await testConfigApi();
+                
+                // Test 1: Environment Variables
+                testEnvVars();
+                
+                // Test 2: Gemini API
+                await testGeminiApi();
+                
+                // Test 3: YouTube API
+                await testYoutubeApi();
+                
+                // Test 4: Proxy API
+                await testProxyApi();
+            } catch (err) {
+                console.error('Test error:', err);
+            }
         }
         
         async function testConfigApi() {
