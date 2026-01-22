@@ -93,8 +93,13 @@ const Auth = {
     
     // Sign in with Google
     async signInWithGoogle() {
+        // Ensure config is loaded before checking
         if (!this.providers.google.clientId) {
-            this.showAuthError('Please configure Google Client ID in settings first.');
+            await this.loadProviderConfig();
+        }
+        
+        if (!this.providers.google.clientId) {
+            this.showAuthError('Google Client ID not configured. Please contact admin.');
             return;
         }
         
@@ -112,6 +117,9 @@ const Auth = {
                 provider: 'google',
                 mode: 'authenticated'
             };
+            
+            // Sync to database
+            await this.syncUserToDatabase(user);
             
             this.saveUser(user);
             this.renderAuthUI();
@@ -149,8 +157,13 @@ const Auth = {
     
     // Sign in with Microsoft/Outlook
     async signInWithMicrosoft() {
+        // Ensure config is loaded before checking
         if (!this.providers.microsoft.clientId) {
-            this.showAuthError('Please configure Microsoft Client ID in settings first.');
+            await this.loadProviderConfig();
+        }
+        
+        if (!this.providers.microsoft.clientId) {
+            this.showAuthError('Microsoft Client ID not configured. Please contact admin.');
             return;
         }
         
@@ -169,6 +182,9 @@ const Auth = {
                 provider: 'microsoft',
                 mode: 'authenticated'
             };
+            
+            // Sync to database
+            await this.syncUserToDatabase(user);
             
             this.saveUser(user);
             this.renderAuthUI();
