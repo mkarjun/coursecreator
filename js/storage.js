@@ -1,23 +1,30 @@
 // Storage Module - Handles all local storage operations
-// Guest mode: Uses sessionStorage (clears on tab close/reload)
-// Logged in: Uses localStorage + D1 database sync
+// Guest/Anonymous mode: Uses sessionStorage (clears on tab close/reload)
+// Logged in (Google/Microsoft): Uses localStorage + D1 database sync
 
 const Storage = {
-    // Check if user is a guest
-    isGuestMode() {
+    // Check if user is authenticated (logged in with OAuth)
+    isAuthenticated() {
         if (typeof Auth === 'undefined') return false;
-        return Auth.isGuest();
+        // User must be logged in AND not be a guest
+        return Auth.isLoggedIn() && !Auth.isGuest();
     },
     
     // Get the appropriate storage based on user mode
     getStorage() {
-        return this.isGuestMode() ? sessionStorage : localStorage;
+        // Only authenticated users get persistent localStorage
+        return this.isAuthenticated() ? localStorage : sessionStorage;
+    },
+    
+    // Get the storage key based on user mode
+    getStorageKey() {
+        return this.isAuthenticated() ? CONFIG.STORAGE_KEYS.COURSES : 'guestCourses';
     },
     
     // Get all saved courses
     getCourses() {
         const storage = this.getStorage();
-        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
+        const key = this.getStorageKey();
         const data = storage.getItem(key);
         return data ? JSON.parse(data) : [];
     },
@@ -25,7 +32,7 @@ const Storage = {
     // Save a new course
     saveCourse(course) {
         const storage = this.getStorage();
-        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
+        const key = this.getStorageKey();
         
         const courses = this.getCourses();
         const existingIndex = courses.findIndex(c => c.id === course.id);
@@ -36,15 +43,15 @@ const Storage = {
             courses.unshift(course);
         }
         
-        // Limit to 5 courses for guests
-        if (this.isGuestMode() && courses.length > 5) {
+        // Limit to 5 courses for guests/anonymous users
+        if (!this.isAuthenticated() && courses.length > 5) {
             courses.pop();
         }
         
         storage.setItem(key, JSON.stringify(courses));
         
         // Sync to D1 database for logged-in users
-        if (!this.isGuestMode() && window.DatabaseService) {
+        if (this.isAuthenticated() && window.DatabaseService) {
             this.syncCourseToDatabase(course);
         }
         
@@ -72,14 +79,14 @@ const Storage = {
     // Delete a course
     deleteCourse(courseId) {
         const storage = this.getStorage();
-        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
+        const key = this.getStorageKey();
         
         const courses = this.getCourses();
         const filtered = courses.filter(c => c.id !== courseId);
         storage.setItem(key, JSON.stringify(filtered));
         
         // Sync deletion to database for logged-in users
-        if (!this.isGuestMode() && window.DatabaseService) {
+        if (this.isAuthenticated() && window.DatabaseService) {
             DatabaseService.deleteCourse(courseId).catch(console.warn);
         }
     },
@@ -87,7 +94,7 @@ const Storage = {
     // Update course progress
     updateCourseProgress(courseId, progress) {
         const storage = this.getStorage();
-        const key = this.isGuestMode() ? 'guestCourses' : CONFIG.STORAGE_KEYS.COURSES;
+        const key = this.getStorageKey();
         
         const courses = this.getCourses();
         const course = courses.find(c => c.id === courseId);
@@ -98,7 +105,7 @@ const Storage = {
             storage.setItem(key, JSON.stringify(courses));
             
             // Sync to database for logged-in users
-            if (!this.isGuestMode() && window.DatabaseService) {
+            if (this.isAuthenticated() && window.DatabaseService) {
                 DatabaseService.updateProgress(courseId, course.progress).catch(console.warn);
             }
         }
