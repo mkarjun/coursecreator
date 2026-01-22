@@ -5,15 +5,30 @@
 const Storage = {
     // Check if user is authenticated (logged in with OAuth)
     isAuthenticated() {
-        if (typeof Auth === 'undefined') return false;
-        // User must be logged in AND not be a guest
-        return Auth.isLoggedIn() && !Auth.isGuest();
+        // Must have Auth module
+        if (typeof Auth === 'undefined') {
+            console.log('📦 Storage: Auth undefined, using sessionStorage');
+            return false;
+        }
+        
+        // Must have a current user
+        if (!Auth.currentUser) {
+            console.log('📦 Storage: No user, using sessionStorage');
+            return false;
+        }
+        
+        // User must have 'authenticated' mode (not 'guest')
+        const isAuth = Auth.currentUser.mode === 'authenticated';
+        console.log('📦 Storage: User mode =', Auth.currentUser.mode, ', isAuthenticated =', isAuth);
+        return isAuth;
     },
     
     // Get the appropriate storage based on user mode
     getStorage() {
         // Only authenticated users get persistent localStorage
-        return this.isAuthenticated() ? localStorage : sessionStorage;
+        const storage = this.isAuthenticated() ? localStorage : sessionStorage;
+        console.log('📦 Storage: Using', this.isAuthenticated() ? 'localStorage' : 'sessionStorage');
+        return storage;
     },
     
     // Get the storage key based on user mode
