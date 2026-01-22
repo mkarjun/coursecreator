@@ -25,13 +25,16 @@ const CONFIG = {
     // Optimized Master Prompt - Topic-adaptive, unique content
     COURSE_PROMPT: `Create course JSON for "{{TOPIC}}". Assess difficulty (beginner/intermediate/advanced) and adapt depth.
 
-{"difficulty":"level","introduction":"150-200 words: what {{TOPIC}} is, why it matters, what you'll learn - BE SPECIFIC","lessons":[{"title":"{{TOPIC}}-specific title","description":"200-300 words with real examples","keyPoints":["specific","points","here"]}],"quiz":[{"question":"test {{TOPIC}} knowledge","options":["correct","wrong1","wrong2","wrong3"],"correctIndex":0,"explanation":"why"}],"notes":"# {{TOPIC}} Notes\\n500-800 words markdown with ## sections, examples, tips"}
+{"difficulty":"level","introduction":"150-200 words: what {{TOPIC}} is, why it matters, what you'll learn - BE SPECIFIC","lessons":[{"title":"{{TOPIC}}-specific title","description":"200-300 words with real examples","keyPoints":["specific","points","here"]}],"quiz":[{"question":"factual question about {{TOPIC}} concepts","options":["correct","wrong1","wrong2","wrong3"],"correctIndex":0,"explanation":"why"}],"notes":"# {{TOPIC}} Notes\\n500-800 words markdown with ## sections, examples, tips"}
 
 Rules:
 - 4 lessons: Foundations→Core Skills→Application→Mastery
 - Beginner=simple language, zero assumptions; Advanced=technical depth
-- 5 quiz: 2 easy, 2 medium, 1 hard
-- ALL content SPECIFIC to {{TOPIC}}, no generic filler
+- 5 quiz questions that TEST ACTUAL KNOWLEDGE of {{TOPIC}}
+  Example for Python: "What does len() return?" NOT "Why learn Python?"
+  Example for Guitar: "What is a chord?" NOT "What's the best way to practice?"
+- Quiz must have FACTUAL answers about {{TOPIC}} concepts, definitions, syntax, techniques
+- ALL content SPECIFIC to {{TOPIC}}, no generic learning advice
 - Valid JSON only`,
     
     // Badge Definitions
