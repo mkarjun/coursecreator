@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #1a1a2e; color: #fff; }
+        .test { margin: 20px 0; padding: 15px; background: #16213e; border-radius: 8px; }
+        .success { border-left: 4px solid #00d4aa; }
+        .error { border-left: 4px solid #e53e3e; }
+        .pending { border-left: 4px solid #ed8936; }
+        button { padding: 10px 20px; background: #00d4aa; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        pre { background: #0a0a1a; padding: 10px; border-radius: 5px; overflow: auto; max-height: 200px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 API Test Page</h1>
+    
+    <div class="test" id="envTest">
+        <h3>1. Environment Variables</h3>
+        <div id="envResult">Click button to test...</div>
+    </div>
+    
+    <div class="test" id="geminiTest">
+        <h3>2. Gemini API Test</h3>
+        <div id="geminiResult">Click button to test...</div>
+    </div>
+    
+    <div class="test" id="youtubeTest">
+        <h3>3. YouTube API Test</h3>
+        <div id="youtubeResult">Click button to test...</div>
+    </div>
+    
+    <button onclick="runAllTests()">🚀 Run All Tests</button>
+    <button onclick="location.href='index.html'">← Back to App</button>
+
+    <script src="js/env.js"></script>
+    <script>
+        async function runAllTests() {
+            // Test 1: Environment Variables
+            const envDiv = document.getElementById('envTest');
+            const envResult = document.getElementById('envResult');
+            
+            if (typeof ENV !== 'undefined') {
+                envResult.innerHTML = `
+                    <p>✅ ENV loaded successfully!</p>
+                    <pre>
+GEMINI_API_KEY: ${ENV.GEMINI_API_KEY ? ENV.GEMINI_API_KEY.substring(0, 10) + '...' : '❌ NOT SET'}
+YOUTUBE_API_KEY: ${ENV.YOUTUBE_API_KEY ? ENV.YOUTUBE_API_KEY.substring(0, 10) + '...' : '❌ NOT SET'}
+                    </pre>
+                `;
+                envDiv.className = 'test success';
+            } else {
+                envResult.innerHTML = '<p>❌ ENV not loaded! Check if env.js exists.</p>';
+                envDiv.className = 'test error';
+                return;
+            }
+            
+            // Test 2: Gemini API
+            const geminiDiv = document.getElementById('geminiTest');
+            const geminiResult = document.getElementById('geminiResult');
+            geminiResult.innerHTML = '⏳ Testing Gemini API...';
+            geminiDiv.className = 'test pending';
+            
+            try {
+                const geminiResponse = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${ENV.GEMINI_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: 'Say "Hello, API works!" in exactly 5 words.' }] }]
+                        })
+                    }
+                );
+                
+                const geminiData = await geminiResponse.json();
+                
+                if (geminiResponse.ok) {
+                    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+                    geminiResult.innerHTML = `<p>✅ Gemini API works!</p><pre>Response: ${text}</pre>`;
+                    geminiDiv.className = 'test success';
+                } else {
+                    geminiResult.innerHTML = `<p>❌ Gemini API Error</p><pre>${JSON.stringify(geminiData, null, 2)}</pre>`;
+                    geminiDiv.className = 'test error';
+                }
+            } catch (err) {
+                geminiResult.innerHTML = `<p>❌ Gemini API Error</p><pre>${err.message}</pre>`;
+                geminiDiv.className = 'test error';
+            }
+            
+            // Test 3: YouTube API
+            const youtubeDiv = document.getElementById('youtubeTest');
+            const youtubeResult = document.getElementById('youtubeResult');
+            youtubeResult.innerHTML = '⏳ Testing YouTube API...';
+            youtubeDiv.className = 'test pending';
+            
+            try {
+                const ytResponse = await fetch(
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=python+tutorial&type=video&maxResults=1&key=${ENV.YOUTUBE_API_KEY}`
+                );
+                
+                const ytData = await ytResponse.json();
+                
+                if (ytResponse.ok && ytData.items?.length > 0) {
+                    const video = ytData.items[0];
+                    youtubeResult.innerHTML = `
+                        <p>✅ YouTube API works!</p>
+                        <pre>Found: ${video.snippet.title}
+Channel: ${video.snippet.channelTitle}
+Video ID: ${video.id.videoId}</pre>
+                    `;
+                    youtubeDiv.className = 'test success';
+                } else {
+                    youtubeResult.innerHTML = `<p>❌ YouTube API Error</p><pre>${JSON.stringify(ytData, null, 2)}</pre>`;
+                    youtubeDiv.className = 'test error';
+                }
+            } catch (err) {
+                youtubeResult.innerHTML = `<p>❌ YouTube API Error</p><pre>${err.message}</pre>`;
+                youtubeDiv.className = 'test error';
+            }
+        }
+        
+        // Auto-run on load
+        runAllTests();
+    </script>
+</body>
+</html>

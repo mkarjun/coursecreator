@@ -1,0 +1,248 @@
+// Course Generator Module - Orchestrates course creation
+
+const CourseGenerator = {
+    currentCourse: null,
+    
+    // Generate a complete course for a topic
+    async generateCourse(topic) {
+        const courseId = `course_${Date.now()}`;
+        
+        // Show loading overlay
+        UI.showLoading('Searching for videos...');
+        
+        try {
+            // Step 1: Search for videos for each lesson
+            UI.updateLoadingStep(1);
+            const lessonVideos = await this.fetchVideosForLessons(topic);
+            
+            // Step 2: Generate course content (AI)
+            UI.updateLoadingStep(2);
+            const content = await ApiService.generateCourseContent(topic);
+            
+            // Step 3: Combine everything
+            UI.updateLoadingStep(3);
+            const course = this.buildCourse(courseId, topic, content, lessonVideos);
+            
+            // Step 4: Prepare quiz
+            UI.updateLoadingStep(4);
+            
+            // Save course
+            Storage.saveCourse(course);
+            Storage.updateStreak();
+            
+            // Check for new badges
+            const newBadges = Storage.checkAndAwardBadges();
+            
+            this.currentCourse = course;
+            
+            // Hide loading and show course
+            UI.hideLoading();
+            UI.showCourse(course);
+            
+            // Show badge notification if earned
+            if (newBadges.length > 0) {
+                setTimeout(() => {
+                    UI.showBadgeNotification(newBadges[0]);
+                }, 1000);
+            }
+            
+            return course;
+        } catch (error) {
+            console.error('Course generation error:', error);
+            UI.hideLoading();
+            UI.showError('Failed to generate course. Please try again.');
+            throw error;
+        }
+    },
+    
+    // Fetch videos for all lessons
+    async fetchVideosForLessons(topic) {
+        const lessonVideos = [];
+        
+        for (const lesson of CONFIG.COURSE_STRUCTURE.lessons) {
+            const searchQuery = `${topic} ${lesson.searchSuffix}`;
+            const videos = await ApiService.searchYouTubeVideos(
+                searchQuery, 
+                CONFIG.MAX_VIDEOS_PER_LESSON
+            );
+            lessonVideos.push(videos);
+        }
+        
+        return lessonVideos;
+    },
+    
+    // Build the course object
+    buildCourse(courseId, topic, content, lessonVideos) {
+        const lessons = content.lessons.map((lesson, index) => ({
+            id: `lesson_${index + 1}`,
+            number: index + 1,
+            title: lesson.title,
+            description: lesson.description,
+            keyPoints: lesson.keyPoints,
+            videos: lessonVideos[index] || []
+        }));
+        
+        return {
+            id: courseId,
+            topic: topic,
+            title: topic,
+            introduction: content.introduction,
+            lessons: lessons,
+            quiz: content.quiz,
+            notes: content.notes,
+            progress: {
+                percentage: 0,
+                completedLessons: [],
+                watchedVideos: [],
+                introCompleted: false,
+                quizCompleted: false,
+                quizScore: null
+            },
+            createdAt: new Date().toISOString(),
+            lastAccessed: new Date().toISOString()
+        };
+    },
+    
+    // Load an existing course
+    loadCourse(courseId) {
+        const course = Storage.getCourse(courseId);
+        if (course) {
+            this.currentCourse = course;
+            course.lastAccessed = new Date().toISOString();
+            Storage.saveCourse(course);
+            UI.showCourse(course);
+        }
+        return course;
+    },
+    
+    // Mark lesson as complete
+    completeLesson(lessonId) {
+        if (!this.currentCourse) return;
+        
+        const progress = this.currentCourse.progress;
+        if (!progress.completedLessons.includes(lessonId)) {
+            progress.completedLessons.push(lessonId);
+        }
+        
+        this.updateProgressPercentage();
+        Storage.saveCourse(this.currentCourse);
+        Storage.updateStreak();
+        
+        const newBadges = Storage.checkAndAwardBadges();
+        if (newBadges.length > 0) {
+            UI.showBadgeNotification(newBadges[0]);
+        }
+        
+        UI.updateProgressDisplay(this.currentCourse);
+    },
+    
+    // Mark video as watched
+    markVideoWatched(videoId) {
+        if (!this.currentCourse) return;
+        
+        const progress = this.currentCourse.progress;
+        if (!progress.watchedVideos.includes(videoId)) {
+            progress.watchedVideos.push(videoId);
+        }
+        
+        Storage.saveCourse(this.currentCourse);
+        Storage.updateStreak();
+        
+        const newBadges = Storage.checkAndAwardBadges();
+        if (newBadges.length > 0) {
+            UI.showBadgeNotification(newBadges[0]);
+        }
+    },
+    
+    // Complete introduction
+    completeIntro() {
+        if (!this.currentCourse) return;
+        
+        this.currentCourse.progress.introCompleted = true;
+        this.updateProgressPercentage();
+        Storage.saveCourse(this.currentCourse);
+        UI.updateProgressDisplay(this.currentCourse);
+    },
+    
+    // Submit quiz answers
+    submitQuiz(answers) {
+        if (!this.currentCourse) return null;
+        
+        const quiz = this.currentCourse.quiz;
+        let correct = 0;
+        const results = [];
+        
+        quiz.forEach((question, index) => {
+            const isCorrect = answers[index] === question.correctIndex;
+            if (isCorrect) correct++;
+            results.push({
+                questionIndex: index,
+                selectedAnswer: answers[index],
+                correctAnswer: question.correctIndex,
+                isCorrect: isCorrect,
+                explanation: question.explanation
+            });
+        });
+        
+        const score = Math.round((correct / quiz.length) * 100);
+        
+        this.currentCourse.progress.quizCompleted = true;
+        this.currentCourse.progress.quizScore = score;
+        this.updateProgressPercentage();
+        Storage.saveCourse(this.currentCourse);
+        Storage.updateStreak();
+        
+        const newBadges = Storage.checkAndAwardBadges();
+        if (newBadges.length > 0) {
+            setTimeout(() => {
+                UI.showBadgeNotification(newBadges[0]);
+            }, 2000);
+        }
+        
+        UI.updateProgressDisplay(this.currentCourse);
+        
+        return { score, correct, total: quiz.length, results };
+    },
+    
+    // Calculate and update progress percentage
+    updateProgressPercentage() {
+        if (!this.currentCourse) return;
+        
+        const progress = this.currentCourse.progress;
+        const totalItems = this.currentCourse.lessons.length + 2; // lessons + intro + quiz
+        let completed = 0;
+        
+        if (progress.introCompleted) completed++;
+        completed += progress.completedLessons.length;
+        if (progress.quizCompleted) completed++;
+        
+        progress.percentage = Math.round((completed / totalItems) * 100);
+    },
+    
+    // Generate PDF notes
+    async generateNotesPDF() {
+        if (!this.currentCourse) return;
+        
+        const notes = this.currentCourse.notes;
+        const title = this.currentCourse.title;
+        
+        // Create a simple text file for download (PDF would require a library)
+        const blob = new Blob([`${title}\n${'='.repeat(title.length)}\n\n${notes}`], { 
+            type: 'text/plain' 
+        });
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${title.replace(/[^a-z0-9]/gi, '_')}_Notes.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+    
+    // Get current course
+    getCurrentCourse() {
+        return this.currentCourse;
+    }
+};

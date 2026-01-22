@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Creator - Learn Anything</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-graduation-cap"></i>
+            <span>Course Creator</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </li>
+            <li data-page="my-courses">
+                <i class="fas fa-book"></i>
+                <span>My Courses</span>
+            </li>
+            <li data-page="badges">
+                <i class="fas fa-trophy"></i>
+                <span>Badges</span>
+            </li>
+            <li data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="search-container">
+                <input type="text" id="topicInput" placeholder="Enter a topic to create a course..." />
+                <button id="createCourseBtn" class="btn-primary">
+                    <i class="fas fa-magic"></i> Generate Course
+                </button>
+            </div>
+            
+            <!-- Spacer to push right items -->
+            <div class="header-spacer"></div>
+            
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            
+            <!-- User Profile Section -->
+            <div class="profile-container">
+                <button class="profile-btn" id="profileBtn" onclick="Auth.toggleProfileDropdown()">
+                    <div class="profile-avatar empty">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <!-- Content populated by Auth.js -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Home Page -->
+        <section class="page active" id="homePage">
+            <div class="hero-section">
+                <h1>Welcome to <span class="gradient-text">Course Creator</span></h1>
+                <p>Transform any topic into a structured learning experience with curated YouTube videos, AI-generated notes, and interactive quizzes.</p>
+                
+                <div class="topic-suggestions">
+                    <h3>Popular Topics</h3>
+                    <div class="suggestion-chips">
+                        <button class="chip" data-topic="Quantum Computing">Quantum Computing</button>
+                        <button class="chip" data-topic="Machine Learning">Machine Learning</button>
+                        <button class="chip" data-topic="Web Development">Web Development</button>
+                        <button class="chip" data-topic="Data Science">Data Science</button>
+                        <button class="chip" data-topic="Blockchain">Blockchain</button>
+                        <button class="chip" data-topic="Cybersecurity">Cybersecurity</button>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-video"></i>
+                        <h3>Curated Videos</h3>
+                        <p>Best YouTube videos organized in a structured learning path</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>AI Notes</h3>
+                        <p>Auto-generated comprehensive notes and summaries</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>Quizzes</h3>
+                        <p>Interactive quizzes to test your understanding</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-medal"></i>
+                        <h3>Badges</h3>
+                        <p>Earn badges as you complete courses</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Course View Page -->
+        <section class="page" id="coursePage">
+            <div class="course-header">
+                <div class="course-title-section">
+                    <h1>Online Course: <span class="gradient-text" id="courseTitle">Loading...</span></h1>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="progress-text" id="progressText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-content">
+                <div class="course-main">
+                    <!-- Introduction Section -->
+                    <div class="course-section" id="introSection">
+                        <h2 class="section-title">Introduction</h2>
+                        <div class="section-content" id="introContent">
+                            <!-- AI-generated introduction will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Lessons Container -->
+                    <div id="lessonsContainer">
+                        <!-- Lessons will be dynamically generated -->
+                    </div>
+
+                    <!-- Quiz Section -->
+                    <div class="course-section" id="quizSection">
+                        <h2 class="section-title">
+                            <i class="fas fa-clipboard-question"></i> Interactive Quiz
+                        </h2>
+                        <div class="quiz-container" id="quizContainer">
+                            <!-- Quiz will be dynamically generated -->
+                        </div>
+                        <div class="quiz-results hidden" id="quizResults">
+                            <h3>Quiz Results</h3>
+                            <div class="score-display" id="scoreDisplay"></div>
+                            <button class="btn-primary" id="retakeQuizBtn">Retake Quiz</button>
+                        </div>
+                    </div>
+
+                    <!-- Resources Section -->
+                    <div class="course-section" id="resourcesSection">
+                        <h2 class="section-title">
+                            <i class="fas fa-download"></i> Downloadable Resources
+                        </h2>
+                        <div class="resources-grid" id="resourcesGrid">
+                            <!-- Resources will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Sidebar -->
+                <aside class="course-sidebar">
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">Course Progress</h3>
+                        <ul class="progress-checklist" id="progressChecklist">
+                            <!-- Progress items will be dynamically generated -->
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">Course Notes</h3>
+                        <button class="btn-secondary" id="downloadNotesBtn">
+                            <i class="fas fa-download"></i> Download Notes (PDF)
+                        </button>
+                        <button class="btn-secondary" id="viewNotesBtn">
+                            <i class="fas fa-eye"></i> View Full Notes
+                        </button>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">Share Course</h3>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="twitter">
+                                <i class="fab fa-twitter"></i>
+                            </button>
+                            <button class="share-btn" data-platform="linkedin">
+                                <i class="fab fa-linkedin"></i>
+                            </button>
+                            <button class="share-btn" data-platform="copy">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- My Courses Page -->
+        <section class="page" id="myCoursesPage">
+            <h1>My Courses</h1>
+            <div class="courses-grid" id="coursesGrid">
+                <!-- Saved courses will appear here -->
+                <div class="empty-state" id="emptyCoursesState">
+                    <i class="fas fa-book-open"></i>
+                    <h3>No courses yet</h3>
+                    <p>Generate your first course by entering a topic above!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Badges Page -->
+        <section class="page" id="badgesPage">
+            <h1>Your Achievements</h1>
+            <div class="badges-container">
+                <div class="badges-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-trophy"></i>
+                        <span class="stat-number" id="totalBadges">0</span>
+                        <span class="stat-label">Badges Earned</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-book-reader"></i>
+                        <span class="stat-number" id="coursesCompleted">0</span>
+                        <span class="stat-label">Courses Completed</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock"></i>
+                        <span class="stat-number" id="totalHours">0</span>
+                        <span class="stat-label">Hours Learned</span>
+                    </div>
+                </div>
+                
+                <div class="badges-grid" id="badgesGrid">
+                    <!-- Badges will be displayed here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section class="page" id="settingsPage">
+            <h1>Settings</h1>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Preferences</h3>
+                    <div class="form-group toggle-group">
+                        <label>Dark Mode</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="form-group toggle-group">
+                        <label>Auto-play Videos</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="autoplayToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section danger-zone">
+                    <h3>Danger Zone</h3>
+                    <button class="btn-danger" id="clearAllData">
+                        <i class="fas fa-trash"></i> Clear All Data
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notes Modal -->
+        <div class="modal" id="notesModal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2>Course Notes</h2>
+                    <button class="modal-close" id="closeNotesModal">&times;</button>
+                </div>
+                <div class="modal-body" id="notesContent">
+                    <!-- Notes will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Modal -->
+        <div class="modal auth-modal" id="authModal">
+            <div class="modal-content auth-content">
+                <div class="modal-header">
+                    <h2>Welcome to Course Creator</h2>
+                    <button class="modal-close" onclick="Auth.hideAuthModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="auth-subtitle">Sign in to save your progress and sync across devices</p>
+                    
+                    <div class="auth-error" id="authError"></div>
+                    
+                    <div class="auth-buttons">
+                        <button class="auth-btn google" onclick="Auth.signInWithGoogle()">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Continue with Google
+                        </button>
+                        
+                        <button class="auth-btn microsoft" onclick="Auth.signInWithMicrosoft()">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path fill="#F25022" d="M1 1h10v10H1z"/>
+                                <path fill="#00A4EF" d="M1 13h10v10H1z"/>
+                                <path fill="#7FBA00" d="M13 1h10v10H13z"/>
+                                <path fill="#FFB900" d="M13 13h10v10H13z"/>
+                            </svg>
+                            Continue with Outlook
+                        </button>
+                    </div>
+                    
+                    <div class="auth-divider">
+                        <span>or</span>
+                    </div>
+                    
+                    <button class="auth-btn guest" onclick="Auth.continueAsGuest()">
+                        <i class="fas fa-user-clock"></i>
+                        Continue as Guest
+                    </button>
+                    
+                    <p class="auth-guest-note">
+                        <i class="fas fa-info-circle"></i>
+                        Guest mode won't save your progress or sync across devices
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p id="loadingText">Generating your course...</p>
+                <div class="loading-steps">
+                    <div class="loading-step" id="step1">
+                        <i class="fas fa-search"></i> Searching for videos...
+                    </div>
+                    <div class="loading-step" id="step2">
+                        <i class="fas fa-brain"></i> Generating course structure...
+                    </div>
+                    <div class="loading-step" id="step3">
+                        <i class="fas fa-file-alt"></i> Creating notes...
+                    </div>
+                    <div class="loading-step" id="step4">
+                        <i class="fas fa-question-circle"></i> Preparing quizzes...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/env.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api-service.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/course-generator.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
