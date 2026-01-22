@@ -17,9 +17,9 @@ const Auth = {
     },
     
     // Initialize auth
-    init() {
+    async init() {
         this.loadUser();
-        this.loadProviderConfig();
+        await this.loadProviderConfig();
         this.renderAuthUI();
     },
     
@@ -40,8 +40,22 @@ const Auth = {
     },
     
     // Load provider configuration
-    loadProviderConfig() {
-        // Load from ENV first (for production)
+    async loadProviderConfig() {
+        // Try to load from API first (production)
+        try {
+            const response = await fetch('/api/config');
+            if (response.ok) {
+                const config = await response.json();
+                if (config.googleClientId) this.providers.google.clientId = config.googleClientId;
+                if (config.microsoftClientId) this.providers.microsoft.clientId = config.microsoftClientId;
+                console.log('✅ OAuth config loaded from API');
+                return;
+            }
+        } catch (e) {
+            console.log('API config not available, using local config');
+        }
+        
+        // Fallback: Load from ENV (local development)
         if (typeof ENV !== 'undefined') {
             this.providers.google.clientId = ENV.GOOGLE_CLIENT_ID || '';
             this.providers.microsoft.clientId = ENV.MICROSOFT_CLIENT_ID || '';
