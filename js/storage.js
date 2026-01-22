@@ -1,54 +1,57 @@
-// Storage Module - Handles all local storage operations
-// Guest/Anonymous mode: Uses sessionStorage (clears on tab close/reload)
-// Logged in (Google/Microsoft): Uses localStorage + D1 database sync
+// Storage Module - Industry Standard Approach
+// ============================================
+// NOT SIGNED IN: In-memory only (clears on page refresh)
+// SIGNED IN (Google): D1 database is source of truth, localStorage as cache
+// 
+// This approach:
+// - No storage for unauthenticated users (clean, no data residue)
+// - Database-first for authenticated users (syncs across devices)
+// - LocalStorage as read cache for faster initial loads
 
 const Storage = {
+    // In-memory storage for unauthenticated sessions
+    _memoryStore: {
+        courses: [],
+        badges: [],
+        currentCourse: null
+    },
+    
     // Check if user is authenticated (logged in with OAuth)
     isAuthenticated() {
-        // Must have Auth module
-        if (typeof Auth === 'undefined') {
-            console.log('📦 Storage: Auth undefined, using sessionStorage');
-            return false;
-        }
-        
-        // Must have a current user
-        if (!Auth.currentUser) {
-            console.log('📦 Storage: No user, using sessionStorage');
-            return false;
-        }
-        
-        // User must have 'authenticated' mode (not 'guest')
-        const isAuth = Auth.currentUser.mode === 'authenticated';
-        console.log('📦 Storage: User mode =', Auth.currentUser.mode, ', isAuthenticated =', isAuth);
-        return isAuth;
+        if (typeof Auth === 'undefined') return false;
+        if (!Auth.currentUser) return false;
+        return Auth.currentUser.mode === 'authenticated';
     },
     
-    // Get the appropriate storage based on user mode
-    getStorage() {
-        // Only authenticated users get persistent localStorage
-        const storage = this.isAuthenticated() ? localStorage : sessionStorage;
-        console.log('📦 Storage: Using', this.isAuthenticated() ? 'localStorage' : 'sessionStorage');
-        return storage;
-    },
-    
-    // Get the storage key based on user mode
-    getStorageKey() {
-        return this.isAuthenticated() ? CONFIG.STORAGE_KEYS.COURSES : 'guestCourses';
-    },
+    // ============ COURSE OPERATIONS ============
     
     // Get all saved courses
     getCourses() {
-        const storage = this.getStorage();
-        const key = this.getStorageKey();
-        const data = storage.getItem(key);
+        if (!this.isAuthenticated()) {
+            return this._memoryStore.courses;
+        }
+        const data = localStorage.getItem(CONFIG.STORAGE_KEYS.COURSES);
         return data ? JSON.parse(data) : [];
     },
     
-    // Save a new course
+    // Save a course
     saveCourse(course) {
-        const storage = this.getStorage();
-        const key = this.getStorageKey();
+        if (!this.isAuthenticated()) {
+            // Guest: Store in memory only (clears on refresh)
+            const existingIndex = this._memoryStore.courses.findIndex(c => c.id === course.id);
+            if (existingIndex >= 0) {
+                this._memoryStore.courses[existingIndex] = course;
+            } else {
+                this._memoryStore.courses.unshift(course);
+                // Limit to 3 courses for guests
+                if (this._memoryStore.courses.length > 3) {
+                    this._memoryStore.courses.pop();
+                }
+            }
+            return course;
+        }
         
+        // Authenticated: Save to localStorage cache + D1 database
         const courses = this.getCourses();
         const existingIndex = courses.findIndex(c => c.id === course.id);
         
@@ -58,31 +61,12 @@ const Storage = {
             courses.unshift(course);
         }
         
-        // Limit to 5 courses for guests/anonymous users
-        if (!this.isAuthenticated() && courses.length > 5) {
-            courses.pop();
-        }
+        localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(courses));
         
-        storage.setItem(key, JSON.stringify(courses));
-        
-        // Sync to D1 database for logged-in users
-        if (this.isAuthenticated() && window.DatabaseService) {
-            this.syncCourseToDatabase(course);
-        }
+        // Sync to D1 database in background
+        this.syncCourseToDatabase(course);
         
         return course;
-    },
-    
-    // Sync course to database (async, fire and forget)
-    async syncCourseToDatabase(course) {
-        try {
-            await DatabaseService.saveCourse(course);
-            if (course.progress) {
-                await DatabaseService.updateProgress(course.id, course.progress);
-            }
-        } catch (error) {
-            console.warn('Failed to sync course to database:', error);
-        }
     },
     
     // Get a specific course by ID
@@ -93,79 +77,138 @@ const Storage = {
     
     // Delete a course
     deleteCourse(courseId) {
-        const storage = this.getStorage();
-        const key = this.getStorageKey();
+        if (!this.isAuthenticated()) {
+            this._memoryStore.courses = this._memoryStore.courses.filter(c => c.id !== courseId);
+            return;
+        }
         
-        const courses = this.getCourses();
-        const filtered = courses.filter(c => c.id !== courseId);
-        storage.setItem(key, JSON.stringify(filtered));
+        const courses = this.getCourses().filter(c => c.id !== courseId);
+        localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(courses));
         
-        // Sync deletion to database for logged-in users
-        if (this.isAuthenticated() && window.DatabaseService) {
+        // Sync to D1 in background
+        if (window.DatabaseService) {
             DatabaseService.deleteCourse(courseId).catch(console.warn);
         }
     },
     
     // Update course progress
     updateCourseProgress(courseId, progress) {
-        const storage = this.getStorage();
-        const key = this.getStorageKey();
-        
         const courses = this.getCourses();
         const course = courses.find(c => c.id === courseId);
         
-        if (course) {
-            course.progress = { ...course.progress, ...progress };
-            course.lastAccessed = new Date().toISOString();
-            storage.setItem(key, JSON.stringify(courses));
-            
-            // Sync to database for logged-in users
-            if (this.isAuthenticated() && window.DatabaseService) {
-                DatabaseService.updateProgress(courseId, course.progress).catch(console.warn);
-            }
+        if (!course) return null;
+        
+        course.progress = { ...course.progress, ...progress };
+        course.lastAccessed = new Date().toISOString();
+        
+        if (!this.isAuthenticated()) {
+            return course;
+        }
+        
+        localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(courses));
+        
+        // Sync to D1 in background
+        if (window.DatabaseService) {
+            DatabaseService.updateProgress(courseId, course.progress).catch(console.warn);
         }
         
         return course;
     },
     
-    // Get earned badges
+    // ============ DATABASE SYNC ============
+    
+    // Sync course to D1 database (async, non-blocking)
+    async syncCourseToDatabase(course) {
+        if (!this.isAuthenticated() || !window.DatabaseService) return;
+        
+        try {
+            await DatabaseService.saveCourse(course);
+            if (course.progress) {
+                await DatabaseService.updateProgress(course.id, course.progress);
+            }
+        } catch (error) {
+            console.warn('Background sync failed:', error);
+        }
+    },
+    
+    // Load courses from D1 database (called on login)
+    async loadFromDatabase() {
+        if (!this.isAuthenticated() || !window.DatabaseService) return;
+        
+        try {
+            const courses = await DatabaseService.getAllCourses();
+            if (courses && courses.length > 0) {
+                localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(courses));
+                console.log('✅ Loaded', courses.length, 'courses from database');
+                return courses;
+            }
+        } catch (error) {
+            console.warn('Failed to load from database:', error);
+        }
+        return [];
+    },
+    
+    // Background refresh (non-blocking, won't interrupt UI)
+    async backgroundRefresh() {
+        if (!this.isAuthenticated()) return;
+        
+        try {
+            const courses = await DatabaseService.getAllCourses();
+            if (courses) {
+                localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(courses));
+                // Emit custom event for UI to update if needed
+                window.dispatchEvent(new CustomEvent('coursesRefreshed', { detail: { courses } }));
+            }
+        } catch (error) {
+            // Silent fail - background operation
+        }
+    },
+    
+    // ============ BADGES ============
+    
     getBadges() {
+        if (!this.isAuthenticated()) {
+            return this._memoryStore.badges;
+        }
         const data = localStorage.getItem(CONFIG.STORAGE_KEYS.BADGES);
         return data ? JSON.parse(data) : [];
     },
     
-    // Award a badge
     awardBadge(badgeId) {
-        const badges = this.getBadges();
+        if (!this.isAuthenticated()) {
+            if (!this._memoryStore.badges.includes(badgeId)) {
+                this._memoryStore.badges.push(badgeId);
+                return true;
+            }
+            return false;
+        }
         
+        const badges = this.getBadges();
         if (!badges.includes(badgeId)) {
             badges.push(badgeId);
             localStorage.setItem(CONFIG.STORAGE_KEYS.BADGES, JSON.stringify(badges));
-            return true; // New badge awarded
+            return true;
         }
-        
-        return false; // Already had badge
+        return false;
     },
     
-    // Check and award badges based on achievements
     checkAndAwardBadges() {
+        if (!this.isAuthenticated()) return [];
+        
         const courses = this.getCourses();
         const earnedBadges = this.getBadges();
         const newBadges = [];
         
-        // Calculate statistics
         const completedCourses = courses.filter(c => c.progress?.percentage === 100).length;
         const perfectQuizzes = courses.filter(c => c.progress?.quizScore === 100).length;
         const totalVideosWatched = courses.reduce((sum, c) => {
             return sum + (c.progress?.watchedVideos?.length || 0);
         }, 0);
         
-        // Check each badge requirement
         for (const badge of CONFIG.BADGES) {
             if (earnedBadges.includes(badge.id)) continue;
             
             let earned = false;
-            
             switch (badge.requirement.type) {
                 case 'courses_completed':
                     earned = completedCourses >= badge.requirement.count;
@@ -190,8 +233,11 @@ const Storage = {
         return newBadges;
     },
     
-    // Check learning streak
+    // ============ STREAK ============
+    
     checkStreak() {
+        if (!this.isAuthenticated()) return 0;
+        
         const settings = this.getSettings();
         const today = new Date().toDateString();
         
@@ -209,8 +255,9 @@ const Storage = {
         return 0;
     },
     
-    // Update learning streak
     updateStreak() {
+        if (!this.isAuthenticated()) return 0;
+        
         const settings = this.getSettings();
         const today = new Date().toDateString();
         
@@ -233,7 +280,8 @@ const Storage = {
         return settings.currentStreak;
     },
     
-    // Get settings
+    // ============ SETTINGS ============
+    
     getSettings() {
         const data = localStorage.getItem(CONFIG.STORAGE_KEYS.SETTINGS);
         return data ? JSON.parse(data) : {
@@ -244,12 +292,12 @@ const Storage = {
         };
     },
     
-    // Save settings
     saveSettings(settings) {
         localStorage.setItem(CONFIG.STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
     },
     
-    // Get statistics
+    // ============ STATISTICS ============
+    
     getStatistics() {
         const courses = this.getCourses();
         const badges = this.getBadges();
@@ -258,8 +306,6 @@ const Storage = {
         const totalVideosWatched = courses.reduce((sum, c) => {
             return sum + (c.progress?.watchedVideos?.length || 0);
         }, 0);
-        
-        // Estimate hours (assuming average video length of 10 minutes)
         const totalHours = Math.floor(totalVideosWatched * 10 / 60);
         
         return {
@@ -272,15 +318,22 @@ const Storage = {
         };
     },
     
-    // Clear all data
+    // ============ DATA MANAGEMENT ============
+    
     clearAllData() {
         localStorage.removeItem(CONFIG.STORAGE_KEYS.COURSES);
         localStorage.removeItem(CONFIG.STORAGE_KEYS.BADGES);
         localStorage.removeItem(CONFIG.STORAGE_KEYS.SETTINGS);
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.API_KEYS);
+        this._memoryStore.courses = [];
+        this._memoryStore.badges = [];
     },
     
-    // Export data
+    clearMemoryStore() {
+        this._memoryStore.courses = [];
+        this._memoryStore.badges = [];
+        this._memoryStore.currentCourse = null;
+    },
+    
     exportData() {
         return {
             courses: this.getCourses(),
@@ -290,8 +343,9 @@ const Storage = {
         };
     },
     
-    // Import data
     importData(data) {
+        if (!this.isAuthenticated()) return;
+        
         if (data.courses) {
             localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(data.courses));
         }

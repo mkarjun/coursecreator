@@ -631,7 +631,42 @@ const UI = {
     
     // Render my courses page
     renderMyCourses() {
+        const isAuthenticated = Storage.isAuthenticated();
         const courses = Storage.getCourses();
+        
+        // Show sign-in prompt for unauthenticated users
+        if (!isAuthenticated) {
+            this.elements.emptyCoursesState.classList.add('hidden');
+            this.elements.coursesGrid.innerHTML = `
+                <div class="auth-prompt-container">
+                    <div class="auth-prompt">
+                        <i class="fas fa-user-lock"></i>
+                        <h3>Sign in to save your courses</h3>
+                        <p>Your courses will be saved in the cloud and sync across all your devices.</p>
+                        <p class="auth-prompt-note">
+                            <i class="fas fa-info-circle"></i>
+                            Without signing in, courses are only available during this session and will be lost on page refresh.
+                        </p>
+                        <button class="btn-primary" onclick="Auth.showAuthModal()">
+                            <i class="fab fa-google"></i> Sign in with Google
+                        </button>
+                    </div>
+                    ${courses.length > 0 ? `
+                        <div class="session-courses">
+                            <h4>Current Session Courses (${courses.length})</h4>
+                            <p class="session-warning"><i class="fas fa-exclamation-triangle"></i> These will be lost on refresh</p>
+                            ${courses.map(course => `
+                                <div class="session-course-item" onclick="CourseGenerator.loadCourse('${course.id}')">
+                                    <span>${course.title}</span>
+                                    <span>${course.progress.percentage}%</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            return;
+        }
         
         if (courses.length === 0) {
             this.elements.emptyCoursesState.classList.remove('hidden');

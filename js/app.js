@@ -7,19 +7,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Auth
     Auth.init();
     
-    // Initialize DatabaseService based on auth state
-    if (Auth.isLoggedIn()) {
-        const isGuest = Auth.isGuest();
-        DatabaseService.init(Auth.currentUser, isGuest);
+    // Initialize DatabaseService and load data for authenticated users
+    if (Auth.isLoggedIn() && !Auth.isGuest()) {
+        DatabaseService.init(Auth.currentUser, false);
         
-        // If not guest, sync user to database
-        if (!isGuest) {
-            await Auth.syncUserToDatabase(Auth.currentUser);
-        }
+        // Sync user and load courses from D1 database
+        await Auth.syncUserToDatabase(Auth.currentUser);
+        await Storage.loadFromDatabase();
+        
+        console.log('✅ Authenticated user data loaded');
     }
     
     // Initialize UI
     UI.init();
+    
+    // Listen for background course refreshes (won't interrupt video playback)
+    window.addEventListener('coursesRefreshed', (event) => {
+        // Only update My Courses page if user is viewing it
+        const myCoursesPage = document.getElementById('myCoursesPage');
+        if (myCoursesPage && myCoursesPage.classList.contains('active')) {
+            UI.renderMyCourses();
+        }
+    });
     
     // Check for URL parameters (for sharing courses)
     const urlParams = new URLSearchParams(window.location.search);
