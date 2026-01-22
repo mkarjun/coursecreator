@@ -69,11 +69,12 @@ const ApiService = {
     // Generate course content using Gemini via proxy
     async generateCourseContent(topic) {
         try {
-            const prompt = CONFIG.COURSE_PROMPT.replace('{{TOPIC}}', topic);
+            const prompt = CONFIG.COURSE_PROMPT.replace(/\{\{TOPIC\}\}/g, topic);
             let data;
             
             if (this.isProduction()) {
                 // Use secure proxy in production
+                console.log('🚀 Calling Gemini via proxy for:', topic);
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -82,9 +83,11 @@ const ApiService = {
                 
                 if (!response.ok) {
                     const errorData = await response.json();
+                    console.error('❌ Proxy error:', errorData);
                     throw new Error(`Gemini API error: ${response.status} - ${errorData.error || 'Unknown error'}`);
                 }
                 data = await response.json();
+                console.log('✅ Gemini response received');
             } else {
                 // Local development - use direct API with local keys
                 if (!CONFIG.GEMINI_API_KEY) {
@@ -112,11 +115,20 @@ const ApiService = {
                 data = await response.json();
             }
             
+            // Check if we got valid candidates
+            if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+                console.error('❌ Invalid Gemini response:', data);
+                throw new Error('Invalid response from Gemini API');
+            }
+            
             const content = data.candidates[0].content.parts[0].text;
+            console.log('📝 Parsing AI content...');
             
             // Parse JSON from response (handle potential markdown code blocks)
             const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [null, content];
-            return JSON.parse(jsonMatch[1] || content);
+            const parsed = JSON.parse(jsonMatch[1] || content);
+            console.log('✅ Course content parsed successfully');
+            return parsed;
         } catch (error) {
             console.error('Gemini API Error:', error);
             return this.getDemoCourseContent(topic);
