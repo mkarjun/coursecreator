@@ -15,16 +15,17 @@ const CourseGenerator = {
             UI.updateLoadingStep(1);
             const lessonVideos = await this.fetchVideosForLessons(topic);
             
-            // Step 2: Generate course content (AI)
+            // Step 2: Generate course content (AI) - no quiz
             UI.updateLoadingStep(2);
             const content = await ApiService.generateCourseContent(topic);
             
-            // Step 3: Combine everything
+            // Step 3: Generate quiz separately (better model)
             UI.updateLoadingStep(3);
-            const course = this.buildCourse(courseId, topic, content, lessonVideos);
+            const quiz = await ApiService.generateQuiz(topic);
             
-            // Step 4: Prepare quiz
+            // Step 4: Build final course
             UI.updateLoadingStep(4);
+            const course = this.buildCourse(courseId, topic, content, lessonVideos, quiz);
             
             // Save course
             Storage.saveCourse(course);
@@ -72,7 +73,7 @@ const CourseGenerator = {
     },
     
     // Build the course object
-    buildCourse(courseId, topic, content, lessonVideos) {
+    buildCourse(courseId, topic, content, lessonVideos, quiz) {
         const lessons = content.lessons.map((lesson, index) => ({
             id: `lesson_${index + 1}`,
             number: index + 1,
@@ -88,7 +89,7 @@ const CourseGenerator = {
             title: topic,
             introduction: content.introduction,
             lessons: lessons,
-            quiz: content.quiz,
+            quiz: quiz, // Now passed separately from better model
             notes: content.notes,
             progress: {
                 percentage: 0,

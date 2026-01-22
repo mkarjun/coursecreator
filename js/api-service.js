@@ -66,74 +66,108 @@ const ApiService = {
         }
     },
     
-    // Generate course content using Gemini via proxy
+    // Generate course content (without quiz) using Gemini
     async generateCourseContent(topic) {
         try {
             const prompt = CONFIG.COURSE_PROMPT.replace(/\{\{TOPIC\}\}/g, topic);
-            let data;
+            const data = await this._callGeminiAPI(prompt, 'course');
             
-            if (this.isProduction()) {
-                // Use secure proxy in production
-                console.log('🚀 Calling Gemini via proxy for:', topic);
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('❌ Proxy error:', errorData);
-                    throw new Error(`Gemini API error: ${response.status} - ${errorData.error || 'Unknown error'}`);
-                }
-                data = await response.json();
-                console.log('✅ Gemini response received');
-            } else {
-                // Local development - use direct API with local keys
-                if (!CONFIG.GEMINI_API_KEY) {
-                    console.warn('Gemini API key not set, using demo mode');
-                    return this.getDemoCourseContent(topic);
-                }
-                
-                const response = await fetch(`${CONFIG.GEMINI_API_URL}?key=${CONFIG.GEMINI_API_KEY}`, {
+            // Parse JSON from response
+            const content = data.candidates[0].content.parts[0].text;
+            console.log('📝 Course content received:', content.substring(0, 300));
+            
+            const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [null, content];
+            const parsed = JSON.parse(jsonMatch[1] || content);
+            console.log('✅ Course content parsed:', parsed.lessons?.length, 'lessons');
+            return parsed;
+        } catch (error) {
+            console.error('Course generation error:', error);
+            return this.getDemoCourseContent(topic);
+        }
+    },
+    
+    // Generate quiz questions separately (uses better model)
+    async generateQuiz(topic) {
+        try {
+            const prompt = CONFIG.QUIZ_PROMPT.replace(/\{\{TOPIC\}\}/g, topic);
+            const data = await this._callGeminiAPI(prompt, 'quiz');
+            
+            // Parse JSON from response
+            const content = data.candidates[0].content.parts[0].text;
+            console.log('📝 Quiz response:', content.substring(0, 300));
+            
+            const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [null, content];
+            const parsed = JSON.parse(jsonMatch[1] || content);
+            console.log('✅ Quiz parsed:', parsed.quiz?.length, 'questions');
+            console.log('📊 Questions:', parsed.quiz?.map(q => q.question));
+            return parsed.quiz || [];
+        } catch (error) {
+            console.error('Quiz generation error:', error);
+            return this.getDemoQuiz(topic);
+        }
+    },
+    
+    // Internal: Call Gemini API via proxy or direct
+    async _callGeminiAPI(prompt, type = 'course') {
+        if (this.isProduction()) {
+            console.log(`🚀 Calling Gemini (${type}) via proxy`);
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, type })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Gemini API error: ${response.status} - ${errorData.error || 'Unknown'}`);
+            }
+            const data = await response.json();
+            
+            if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                console.error('❌ Invalid Gemini response:', data);
+                throw new Error('Invalid Gemini response structure');
+            }
+            return data;
+        } else {
+            // Local development
+            if (!CONFIG.GEMINI_API_KEY) {
+                throw new Error('No API key configured');
+            }
+            
+            const model = type === 'quiz' ? 'gemini-2.5-flash' : 'gemini-2.0-flash-lite';
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${CONFIG.GEMINI_API_KEY}`,
+                {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 4096,
+                            temperature: type === 'quiz' ? 0.3 : 0.7,
+                            maxOutputTokens: type === 'quiz' ? 1500 : 4000,
                             responseMimeType: "application/json"
                         }
                     })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
                 }
-                data = await response.json();
+            );
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Gemini API error: ${response.status}`);
             }
-            
-            // Check if we got valid candidates
-            if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-                console.error('❌ Invalid Gemini response:', data);
-                throw new Error('Invalid response from Gemini API');
-            }
-            
-            const content = data.candidates[0].content.parts[0].text;
-            console.log('📝 Raw AI response:', content.substring(0, 500));
-            
-            // Parse JSON from response (handle potential markdown code blocks)
-            const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [null, content];
-            const parsed = JSON.parse(jsonMatch[1] || content);
-            console.log('✅ Course content parsed successfully');
-            console.log('📊 Quiz questions:', parsed.quiz?.map(q => q.question));
-            return parsed;
-        } catch (error) {
-            console.error('Gemini API Error:', error);
-            return this.getDemoCourseContent(topic);
+            return await response.json();
         }
+    },
+    
+    // Demo quiz for fallback
+    getDemoQuiz(topic) {
+        return [
+            { question: `What is the primary purpose of ${topic}?`, options: ['Learning new skills', 'Entertainment only', 'Physical exercise', 'Social networking'], correctIndex: 0, explanation: `${topic} is primarily for learning and skill development.` },
+            { question: `Which is a key component of ${topic}?`, options: ['Practice', 'Sleeping', 'Ignoring basics', 'Random guessing'], correctIndex: 0, explanation: 'Practice is essential for mastering any skill.' },
+            { question: `What should you do first when learning ${topic}?`, options: ['Understand fundamentals', 'Skip to advanced', 'Give up', 'Memorize everything'], correctIndex: 0, explanation: 'Building a strong foundation is crucial.' },
+            { question: `How can you improve in ${topic}?`, options: ['Regular practice', 'Never practicing', 'Only watching', 'Avoiding challenges'], correctIndex: 0, explanation: 'Consistent practice leads to improvement.' },
+            { question: `What mindset helps with ${topic}?`, options: ['Growth mindset', 'Fixed mindset', 'Negative attitude', 'Perfectionism'], correctIndex: 0, explanation: 'A growth mindset embraces learning from mistakes.' }
+        ];
     },
     
     // Demo videos when API key not available

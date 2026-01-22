@@ -22,31 +22,42 @@ const CONFIG = {
         API_KEYS: 'courseCreator_apiKeys'
     },
     
-    // Optimized Master Prompt - Topic-adaptive, unique content
+    // Optimized Course Prompt - Lean, no quiz (separate request)
     COURSE_PROMPT: `Create educational course JSON for "{{TOPIC}}".
 
-QUIZ RULES - YOU MUST FOLLOW:
-Generate 5 questions that test KNOWLEDGE OF {{TOPIC}} CONCEPTS.
+JSON format:
+{"difficulty":"beginner|intermediate|advanced","introduction":"150 words about {{TOPIC}}","lessons":[{"title":"Title","description":"200 words","keyPoints":["point1","point2","point3"]}],"notes":"# {{TOPIC}} Notes\\n500 words markdown summary"}
 
-GOOD quiz examples:
-- Topic "Python": "What data type does range() return?" / "Which keyword defines a function?"
-- Topic "Guitar": "How many strings does a standard guitar have?" / "What is an open chord?"
-- Topic "Quantum Computing": "What is superposition?" / "What can a qubit represent?"
+Requirements:
+- 4 lessons progressing from basics to advanced
+- Each lesson: clear title, description, 3 key points
+- Notes: comprehensive markdown study guide
+- Valid JSON only, no extra text`,
 
-BAD quiz (NEVER generate these):
-- "Why is X important?" 
-- "What's the best way to learn X?"
-- "Why study foundational principles?"
-- "What should you do after this course?"
+    // Separate Quiz Prompt - Strict factual questions only
+    QUIZ_PROMPT: `Generate 5 quiz questions that test FACTUAL knowledge about "{{TOPIC}}".
 
-Each question MUST have ONE factual correct answer about {{TOPIC}}.
+MANDATORY RULES - FOLLOW EXACTLY:
+1. Every question must have ONE objectively correct answer that can be verified
+2. Questions must test SPECIFIC FACTS about {{TOPIC}}:
+   - Definitions, syntax, terminology
+   - Numbers, dates, measurements  
+   - Names of concepts, components, tools
+   - How things work mechanically/technically
+3. NEVER ask about opinions, "best practices", or "why is X important"
+4. NEVER use phrases like "key challenge", "most effective approach", "foundational principles"
 
-JSON:
-{"difficulty":"beginner|intermediate|advanced","introduction":"150-200 words about {{TOPIC}}","lessons":[{"title":"Title","description":"200-300 words","keyPoints":["point1","point2","point3"]}],"quiz":[{"question":"Factual {{TOPIC}} question","options":["correct","wrong","wrong","wrong"],"correctIndex":0,"explanation":"Why correct"}],"notes":"# Notes\\n500-800 words markdown"}
+Return JSON:
+{"quiz":[{"question":"Question?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why A is correct"}]}
 
-- 4 lessons from basics to advanced
-- 5 quiz questions testing facts/concepts/definitions
-- Valid JSON only`,
+EXAMPLES FOR {{TOPIC}}:
+If Python: "What symbol starts a comment in Python?" → #
+If Guitar: "What note is the thickest string tuned to?" → E
+If Cooking: "At what temperature (°F) does water boil?" → 212
+If JavaScript: "Which method adds an element to the end of an array?" → push()
+If Photography: "What does ISO control?" → Light sensitivity
+
+Generate 5 similar FACTUAL questions for {{TOPIC}}.`,
     
     // Badge Definitions
     BADGES: [

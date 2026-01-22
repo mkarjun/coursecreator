@@ -188,9 +188,9 @@ const UI = {
         
         const messages = [
             'Searching for videos...',
-            'Generating course structure...',
-            'Creating notes...',
-            'Preparing quizzes...'
+            'Generating course content...',
+            'Creating quiz questions...',
+            'Building your course...'
         ];
         
         this.elements.loadingText.textContent = messages[stepNumber - 1] || 'Almost done...';

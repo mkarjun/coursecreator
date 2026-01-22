@@ -1,10 +1,11 @@
 // Cloudflare Function: POST /api/generate
-// Proxies requests to Gemini API, keeping API key server-side
+// Optimized two-model approach for course and quiz generation
+// Course content: gemini-2.0-flash-lite (fast, cheap)
+// Quiz: gemini-2.5-flash (better instruction following)
 
 export async function onRequestPost(context) {
     const { request, env } = context;
     
-    // CORS headers
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -13,10 +14,10 @@ export async function onRequestPost(context) {
 
     try {
         const body = await request.json();
-        const { prompt } = body;
+        const { prompt, type = 'course', topic } = body;
 
-        if (!prompt) {
-            return new Response(JSON.stringify({ error: 'Prompt is required' }), {
+        if (!prompt && !topic) {
+            return new Response(JSON.stringify({ error: 'Prompt or topic is required' }), {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
@@ -30,15 +31,28 @@ export async function onRequestPost(context) {
             });
         }
 
+        // Select model based on task type
+        // flash-lite: Faster, cheaper - good for content generation
+        // 2.5-flash: Better at following complex instructions - good for quizzes
+        const model = type === 'quiz' ? 'gemini-2.5-flash' : 'gemini-2.0-flash-lite';
+        
+        // Token limits to prevent excessive generation
+        const maxTokens = type === 'quiz' ? 1500 : 4000;
+        
+        // Lower temperature for more focused output
+        const temperature = type === 'quiz' ? 0.3 : 0.7;
+
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: {
-                        responseMimeType: "application/json"
+                        responseMimeType: "application/json",
+                        maxOutputTokens: maxTokens,
+                        temperature: temperature
                     }
                 })
             }
