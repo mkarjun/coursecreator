@@ -158,6 +158,12 @@ const Auth = {
             this.saveUser(user);
             this.renderAuthUI();
             this.hideAuthModal();
+            
+            // Refresh My Courses to show user's saved courses
+            if (typeof UI !== 'undefined' && UI.renderMyCourses) {
+                UI.renderMyCourses();
+            }
+            
             this.showAuthSuccess(`Welcome, ${user.name}!`);
             
         } catch (error) {

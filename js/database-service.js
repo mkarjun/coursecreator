@@ -342,7 +342,7 @@ const DatabaseService = {
             const data = await this.getAllUserData();
             
             if (data.courses && data.courses.length > 0) {
-                // Restore courses to localStorage
+                // Restore courses to localStorage using correct key
                 const formattedCourses = data.courses.map(c => ({
                     id: c.id,
                     topic: c.topic,
@@ -358,19 +358,19 @@ const DatabaseService = {
                     lastAccessed: c.lastAccessed
                 }));
                 
-                localStorage.setItem('coursecreator_courses', JSON.stringify(formattedCourses));
+                localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(formattedCourses));
                 console.log(`✅ Restored ${formattedCourses.length} courses from database`);
             }
             
             if (data.badges && data.badges.length > 0) {
-                localStorage.setItem('coursecreator_badges', JSON.stringify(data.badges.map(b => b.id)));
+                localStorage.setItem(CONFIG.STORAGE_KEYS.BADGES, JSON.stringify(data.badges.map(b => b.id)));
             }
             
             if (data.streak) {
-                const settings = JSON.parse(localStorage.getItem('coursecreator_settings') || '{}');
+                const settings = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.SETTINGS) || '{}');
                 settings.currentStreak = data.streak.current;
                 settings.longestStreak = data.streak.longest;
-                localStorage.setItem('coursecreator_settings', JSON.stringify(settings));
+                localStorage.setItem(CONFIG.STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
             }
             
             return data;
