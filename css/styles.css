@@ -172,13 +172,14 @@ a:hover {
 .header {
     position: sticky;
     top: 0;
-    height: var(--header-height);
+    min-height: var(--header-height);
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    padding: 0 30px;
-    gap: 20px;
+    padding: 10px 30px;
+    gap: 15px;
     z-index: 100;
 }
 
@@ -219,14 +220,17 @@ a:hover {
 }
 
 .search-container {
-    flex: 1;
+    flex: 1 1 300px;
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     max-width: 700px;
+    min-width: 200px;
 }
 
 .search-container input {
-    flex: 1;
+    flex: 1 1 200px;
+    min-width: 0;
     padding: 12px 20px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1391,7 +1395,34 @@ a:hover {
 @media (max-width: 480px) {
     :root {
         --sidebar-width: 100%;
-        --header-height: 60px;
+        --header-height: auto;
+    }
+    
+    .header {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px 15px;
+        gap: 10px;
+    }
+    
+    .search-container {
+        order: 3;
+        flex: 1 1 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+    
+    .search-container input {
+        width: 100%;
+        flex: 1;
+    }
+    
+    .btn-primary {
+        flex-shrink: 0;
+    }
+    
+    .header-spacer {
+        display: none;
     }
     
     .hero-section {
@@ -1434,27 +1465,10 @@ a:hover {
         padding: 15px;
     }
     
-    .search-container {
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-    }
-    
-    .search-container input {
-        width: 100%;
-        padding: 14px 16px;
-        font-size: 14px;
-    }
-    
     .btn-primary {
         width: 100%;
         justify-content: center;
         padding: 14px 20px;
-    }
-    
-    .header {
-        padding: 0 10px;
-        gap: 8px;
     }
     
     .theme-toggle {
@@ -1619,11 +1633,22 @@ a:hover {
     }
     
     .header {
-        padding: 0 15px;
+        flex-wrap: wrap;
+        padding: 10px 15px;
+    }
+    
+    .search-container {
+        order: 3;
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+    
+    .header-spacer {
+        display: none;
     }
     
     .hero-section h1 {
-        font-size: 32px;
+        font-size: 28px;
     }
     
     .page {
