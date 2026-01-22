@@ -1,11 +1,22 @@
 // Main Application Entry Point
 
 // Initialize the application when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('🎓 Course Creator initialized');
     
     // Initialize Auth
     Auth.init();
+    
+    // Initialize DatabaseService based on auth state
+    if (Auth.isLoggedIn()) {
+        const isGuest = Auth.isGuest();
+        DatabaseService.init(Auth.currentUser, isGuest);
+        
+        // If not guest, sync user to database
+        if (!isGuest) {
+            await Auth.syncUserToDatabase(Auth.currentUser);
+        }
+    }
     
     // Initialize UI
     UI.init();
@@ -44,6 +55,7 @@ window.UI = UI;
 window.CourseGenerator = CourseGenerator;
 window.ApiService = ApiService;
 window.Storage = Storage;
+window.DatabaseService = DatabaseService;
 
 // Handle share buttons
 document.addEventListener('click', (e) => {

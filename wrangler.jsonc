@@ -1,5 +1,12 @@
 {
   "name": "coursecreator",
   "compatibility_date": "2026-01-22",
-  "pages_build_output_dir": "./"
+  "pages_build_output_dir": "./",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "coursecreator-db",
+      "database_id": "YOUR_DATABASE_ID_HERE"
+    }
+  ]
 }

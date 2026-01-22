@@ -190,7 +190,7 @@ const Auth = {
     },
     
     // Create mock user for demo/testing
-    createMockUser(provider) {
+    async createMockUser(provider) {
         const mockNames = {
             google: 'Google User',
             microsoft: 'Outlook User'
@@ -204,6 +204,9 @@ const Auth = {
             provider: provider,
             mode: 'authenticated'
         };
+        
+        // Save to database
+        await this.syncUserToDatabase(user);
         
         this.saveUser(user);
         this.renderAuthUI();
@@ -223,18 +226,68 @@ const Auth = {
         };
         
         this.currentUser = user;
-        // Don't save guest to localStorage
+        
+        // Initialize DatabaseService in guest mode (uses sessionStorage)
+        if (typeof DatabaseService !== 'undefined') {
+            DatabaseService.init(user, true);
+        }
+        
+        // Don't save guest to localStorage - guest data clears on tab close
         this.renderAuthUI();
         this.hideAuthModal();
-        this.showAuthSuccess('Continuing as Guest. Your progress will not be saved.');
+        this.showAuthSuccess('Continuing as Guest. Your progress will be cleared when you close this tab.');
+    },
+    
+    // Sync user to database on login
+    async syncUserToDatabase(user) {
+        if (typeof DatabaseService !== 'undefined' && user.mode !== 'guest') {
+            try {
+                // Upsert user in database
+                const result = await DatabaseService.upsertUser({
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    avatar: user.avatar,
+                    provider: user.provider
+                });
+                
+                // Initialize DatabaseService for logged-in user
+                DatabaseService.init(user, false);
+                
+                // If user had guest data, migrate it
+                const guestCourses = sessionStorage.getItem('guestCourses');
+                if (guestCourses && JSON.parse(guestCourses).length > 0) {
+                    const migrate = confirm('You have courses from your guest session. Would you like to save them to your account?');
+                    if (migrate) {
+                        await DatabaseService.migrateGuestDataToUser();
+                    } else {
+                        DatabaseService.clearGuestData();
+                    }
+                }
+                
+                console.log('✅ User synced to database:', result);
+            } catch (error) {
+                console.error('❌ Failed to sync user to database:', error);
+            }
+        }
     },
     
     // Sign out
     signOut() {
+        // Clear database service
+        if (typeof DatabaseService !== 'undefined') {
+            if (this.isGuest()) {
+                DatabaseService.clearGuestData();
+            }
+        }
+        
         this.currentUser = null;
         localStorage.removeItem('courseCreator_user');
         this.renderAuthUI();
         this.showAuthSuccess('You have been signed out.');
+        
+        // Reload to show login modal
+        setTimeout(() => location.reload(), 1000);
     },
     
     // Render auth UI elements
