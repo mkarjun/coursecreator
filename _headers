@@ -1,0 +1,17 @@
+# Cloudflare Pages custom headers
+
+# JS files - no aggressive caching, always revalidate
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# CSS files - short cache with revalidation
+/css/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# Static assets - longer cache
+/images/*
+  Cache-Control: public, max-age=86400
+
+# API routes - no caching
+/api/*
+  Cache-Control: no-store

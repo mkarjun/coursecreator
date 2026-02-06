@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Auth
     Auth.init();
     
+    // Initialize UI first (cache DOM elements, bind events, load settings)
+    // Must happen before any data sync that might call renderMyCourses()
+    UI.init();
+    
     // Initialize DatabaseService and load data for authenticated users
     if (Auth.isLoggedIn() && !Auth.isGuest()) {
         DatabaseService.init(Auth.currentUser, false);
@@ -15,11 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         await Auth.syncUserToDatabase(Auth.currentUser);
         await Storage.loadFromDatabase();
         
+        // Re-render with fresh data from database
+        UI.renderMyCourses();
+        UI.renderBadges();
+        
         console.log('✅ Authenticated user data loaded');
     }
-    
-    // Initialize UI
-    UI.init();
     
     // Listen for background course refreshes (won't interrupt video playback)
     window.addEventListener('coursesRefreshed', (event) => {
