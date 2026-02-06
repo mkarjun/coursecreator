@@ -2697,3 +2697,566 @@ a:hover {
         transform: none;
     }
 }
+
+/* =================================================================
+   LEARNING BATTLES — 1v1 Quiz Challenges
+   ================================================================= */
+
+/* Battle Page Layout */
+#battlePage {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 80vh;
+    padding: 40px 20px;
+}
+
+.battle-state {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    animation: battleFadeIn 0.5s ease;
+}
+
+.battle-state.hidden {
+    display: none;
+}
+
+@keyframes battleFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Challenge Landing Card */
+.battle-challenge-card {
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--card-bg);
+    border-radius: 24px;
+    border: 1px solid rgba(0, 212, 170, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.battle-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: battlePulse 2s ease-in-out infinite;
+}
+
+@keyframes battlePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.battle-challenge-card h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.battle-challenger-info {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.battle-challenger-name {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.battle-topic-badge {
+    display: inline-block;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.15), rgba(0, 212, 170, 0.05));
+    border: 1px solid rgba(0, 212, 170, 0.3);
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 15px 0 30px;
+}
+
+.battle-name-input {
+    max-width: 350px;
+    margin: 0 auto 25px;
+}
+
+.battle-name-input label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.battle-name-input input {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    text-align: center;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.battle-name-input input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.battle-accept-btn {
+    font-size: 1.1rem;
+    padding: 16px 40px;
+    border-radius: 14px;
+}
+
+/* Shake animation for empty name */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+}
+
+.shake {
+    animation: shake 0.4s ease;
+    border-color: #ff4444 !important;
+}
+
+/* Battle Quiz */
+.battle-quiz-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.battle-timer {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+#battleQuizTopic {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.battle-quiz-question {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+}
+
+.battle-quiz-question h4 {
+    margin-bottom: 16px;
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+.battle-quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.battle-quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-secondary);
+}
+
+.battle-quiz-option:hover {
+    border-color: var(--primary);
+    background: rgba(0, 212, 170, 0.05);
+}
+
+.battle-quiz-option.selected {
+    border-color: var(--primary);
+    background: rgba(0, 212, 170, 0.1);
+}
+
+.battle-quiz-option.correct {
+    border-color: #4caf50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.battle-quiz-option.incorrect {
+    border-color: #f44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.battle-quiz-option input[type="radio"] {
+    display: none;
+}
+
+.battle-quiz-option .option-marker {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: var(--border);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.battle-submit-btn {
+    display: block;
+    margin: 30px auto 0;
+    font-size: 1.1rem;
+    padding: 16px 40px;
+}
+
+/* Battle Results */
+.battle-results-card {
+    text-align: center;
+    padding: 50px 30px;
+}
+
+.battle-results-header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.battle-results-topic {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+/* Scoreboard */
+.battle-scoreboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.battle-player {
+    flex: 1;
+    max-width: 220px;
+    padding: 30px 20px;
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    transition: all 0.5s;
+}
+
+.battle-player.winner {
+    border-color: var(--primary);
+    box-shadow: 0 0 30px rgba(0, 212, 170, 0.2);
+    transform: scale(1.05);
+}
+
+.battle-player-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.battle-player.winner .battle-player-avatar {
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.2), rgba(0, 212, 170, 0.05));
+    color: var(--primary);
+}
+
+.battle-player-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.battle-player-score {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), #00f5d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.battle-player-label {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    min-height: 24px;
+}
+
+.battle-vs {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-secondary);
+    padding: 10px;
+    flex-shrink: 0;
+}
+
+/* Battle Results CTA */
+.battle-results-cta {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+}
+
+.battle-results-cta p {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    font-size: 1.05rem;
+}
+
+/* Battle Error */
+.battle-error-card {
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--card-bg);
+    border-radius: 24px;
+    border: 1px solid var(--border);
+}
+
+.battle-error-card i {
+    font-size: 48px;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+}
+
+.battle-error-card h2 {
+    margin-bottom: 10px;
+}
+
+.battle-error-card p {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+}
+
+/* Challenge Button in Quiz Results */
+.quiz-results-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.btn-battle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #ff6b35, #ff4444);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-battle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+}
+
+.btn-battle:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Battle Share Modal */
+.battle-share-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    padding: 20px;
+}
+
+.battle-share-modal.active {
+    opacity: 1;
+}
+
+.battle-share-content {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    position: relative;
+    animation: battleSlideUp 0.4s ease;
+}
+
+@keyframes battleSlideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.battle-share-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.battle-share-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.battle-share-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.battle-share-header h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.battle-share-header p {
+    color: var(--text-secondary);
+}
+
+.battle-share-link {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.battle-share-link input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.battle-share-link .btn-primary {
+    white-space: nowrap;
+}
+
+.battle-share-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.battle-share-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s, opacity 0.2s;
+    color: #fff;
+}
+
+.battle-share-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.battle-share-btn.whatsapp { background: #25D366; }
+.battle-share-btn.twitter { background: #1DA1F2; }
+.battle-share-btn.linkedin { background: #0077B5; }
+
+/* Battle Responsive */
+@media (max-width: 768px) {
+    #battlePage {
+        padding: 20px 15px;
+    }
+
+    .battle-challenge-card {
+        padding: 40px 24px;
+    }
+
+    .battle-challenge-card h1 {
+        font-size: 1.5rem;
+    }
+
+    .battle-topic-badge {
+        font-size: 1rem;
+        padding: 10px 20px;
+    }
+
+    .battle-scoreboard {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .battle-player {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .battle-vs {
+        transform: rotate(90deg);
+        padding: 5px;
+    }
+
+    .battle-share-buttons {
+        flex-direction: column;
+    }
+
+    .battle-share-content {
+        padding: 30px 20px;
+    }
+
+    .quiz-results-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .battle-challenge-card {
+        padding: 30px 16px;
+    }
+
+    .battle-icon {
+        font-size: 48px;
+    }
+
+    .battle-player-score {
+        font-size: 2rem;
+    }
+}

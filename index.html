@@ -3,7 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Creator - Learn Anything</title>
+    <title>Course Creator — Free AI Courses from YouTube Videos</title>
+    <meta name="description" content="Generate free structured courses from YouTube videos with AI-powered notes, quizzes, and learning paths. Turn any topic into a complete learning experience in seconds.">
+    <meta name="keywords" content="course creator, free courses, YouTube learning, AI courses, online learning, study guide, quiz generator">
+    <meta name="author" content="Course Creator">
+    <link rel="canonical" href="https://coursecreator.mkarjun.com/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://coursecreator.mkarjun.com/">
+    <meta property="og:title" content="Course Creator — Free AI Courses from YouTube Videos">
+    <meta property="og:description" content="Turn any topic into a structured course with curated YouTube videos, AI notes, quizzes & 1v1 learning battles. 100% free.">
+    <meta property="og:image" content="https://coursecreator.mkarjun.com/og-image.png">
+    <meta property="og:site_name" content="Course Creator">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Course Creator — Free AI Courses from YouTube">
+    <meta name="twitter:description" content="Turn any topic into a structured course with curated YouTube videos, AI notes & 1v1 quiz battles.">
+    <meta name="twitter:image" content="https://coursecreator.mkarjun.com/og-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Course Creator",
+        "url": "https://coursecreator.mkarjun.com",
+        "description": "Generate free structured courses from YouTube videos with AI-powered notes, quizzes, and learning battles.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": [
+            "AI-generated course structure",
+            "Curated YouTube video lessons",
+            "Interactive quizzes",
+            "Study roadmap & notes",
+            "1v1 Learning Battles",
+            "Community resource links",
+            "Progress tracking & badges"
+        ]
+    }
+    </script>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://www.googleapis.com" crossorigin>
+
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -110,8 +163,8 @@
         <!-- Home Page -->
         <section class="page active" id="homePage">
             <div class="hero-section">
-                <h1>Welcome to <span class="gradient-text">Course Creator</span></h1>
-                <p>Transform any topic into a structured learning experience with curated YouTube videos, AI-generated notes, and interactive quizzes.</p>
+                <h1>Create Free Courses from <span class="gradient-text">YouTube Videos</span></h1>
+                <p>Transform any topic into a structured learning experience with curated videos, AI-generated notes, interactive quizzes, and 1v1 learning battles.</p>
                 
                 <div class="topic-suggestions">
                     <h3>Popular Topics</h3>
@@ -190,7 +243,12 @@
                         <div class="quiz-results hidden" id="quizResults">
                             <h3>Quiz Results</h3>
                             <div class="score-display" id="scoreDisplay"></div>
-                            <button class="btn-primary" id="retakeQuizBtn">Retake Quiz</button>
+                            <div class="quiz-results-actions">
+                                <button class="btn-primary" id="retakeQuizBtn">Retake Quiz</button>
+                                <button class="btn-battle" id="challengeFriendBtn" onclick="Battle.initChallenge()">
+                                    <i class="fas fa-bolt"></i> Challenge a Friend
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -380,6 +438,74 @@
             </div>
         </div>
 
+        <!-- Battle Page (1v1 Learning Battles) -->
+        <section class="page" id="battlePage">
+            <!-- Landing State -->
+            <div class="battle-state" id="battleLanding">
+                <div class="battle-challenge-card">
+                    <div class="battle-icon">⚔️</div>
+                    <h1>You've Been <span class="gradient-text">Challenged!</span></h1>
+                    <div class="battle-challenger-info">
+                        <span class="battle-challenger-name" id="battleChallengerName"></span>
+                        <span> thinks they know more about</span>
+                    </div>
+                    <div class="battle-topic-badge" id="battleTopicBadge"></div>
+                    <div class="battle-name-input">
+                        <label for="battleOpponentName">Enter your name to accept:</label>
+                        <input type="text" id="battleOpponentName" placeholder="Your name..." maxlength="30">
+                    </div>
+                    <button class="btn-primary battle-accept-btn" id="battleAcceptBtn">
+                        <i class="fas fa-bolt"></i> Accept Challenge
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz State -->
+            <div class="battle-state hidden" id="battleQuiz">
+                <div class="battle-quiz-header">
+                    <div class="battle-timer">⚔️ Battle Quiz</div>
+                    <span id="battleQuizTopic"></span>
+                </div>
+                <div class="battle-quiz-container" id="battleQuizContainer">
+                    <!-- Quiz rendered by Battle.renderBattleQuiz() -->
+                </div>
+                <button class="btn-primary battle-submit-btn" id="battleSubmitBtn">
+                    <i class="fas fa-paper-plane"></i> Submit Answers
+                </button>
+            </div>
+
+            <!-- Results State -->
+            <div class="battle-state hidden" id="battleResults">
+                <div class="battle-results-card">
+                    <div class="battle-results-header">
+                        <h1>⚔️ Battle <span class="gradient-text">Results</span></h1>
+                        <div class="battle-results-topic" id="battleResultsTopic"></div>
+                    </div>
+                    <div class="battle-scoreboard" id="battleScoreboard">
+                        <!-- Rendered by Battle.renderResults() -->
+                    </div>
+                    <div class="battle-results-cta">
+                        <p>Want to master <strong id="battleCtaTopic"></strong>?</p>
+                        <button class="btn-primary" onclick="Battle.startCourse()">
+                            <i class="fas fa-graduation-cap"></i> Generate Full Course — Free
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="battle-state hidden" id="battleError">
+                <div class="battle-error-card">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>Battle Not Found</h2>
+                    <p>This challenge link may have expired or is invalid.</p>
+                    <button class="btn-primary" onclick="location.href='/'">
+                        <i class="fas fa-home"></i> Go Home
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- Loading Overlay -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="loading-spinner">
@@ -411,6 +537,7 @@
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/course-generator.js"></script>
+    <script src="js/battle.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/app.js"></script>
 </body>

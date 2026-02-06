@@ -84,6 +84,27 @@ CREATE INDEX IF NOT EXISTS idx_badges_user ON user_badges(user_id);
 CREATE INDEX IF NOT EXISTS idx_video_timestamps_user ON video_timestamps(user_id);
 CREATE INDEX IF NOT EXISTS idx_video_timestamps_course ON video_timestamps(course_id);
 
+-- 1v1 Learning Battles
+CREATE TABLE IF NOT EXISTS battles (
+    id TEXT PRIMARY KEY,
+    challenger_name TEXT NOT NULL,
+    challenger_id TEXT,
+    topic TEXT NOT NULL,
+    course_title TEXT,
+    quiz_data TEXT NOT NULL,
+    challenger_score INTEGER NOT NULL,
+    challenger_answers TEXT NOT NULL,
+    opponent_name TEXT,
+    opponent_score INTEGER,
+    opponent_answers TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at TEXT DEFAULT (datetime('now')),
+    completed_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_battles_status ON battles(status);
+CREATE INDEX IF NOT EXISTS idx_battles_created ON battles(created_at);
+
 -- Data retention: Auto-cleanup view for courses older than 30 days (for inactive users)
 -- This will be used by a cleanup function
 CREATE VIEW IF NOT EXISTS stale_courses AS

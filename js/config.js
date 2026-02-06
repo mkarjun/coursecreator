@@ -123,6 +123,20 @@ Generate 5 factual {{TOPIC}} questions NOW:`,
             description: 'Watch 50 videos',
             icon: 'fa-play-circle',
             requirement: { type: 'videos_watched', count: 50 }
+        },
+        {
+            id: 'first_battle',
+            name: 'First Blood',
+            description: 'Create your first Learning Battle',
+            icon: 'fa-bolt',
+            requirement: { type: 'battles_created', count: 1 }
+        },
+        {
+            id: 'battle_master',
+            name: 'Battle Master',
+            description: 'Create 10 Learning Battles',
+            icon: 'fa-fire',
+            requirement: { type: 'battles_created', count: 10 }
         }
     ],
     

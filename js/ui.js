@@ -156,7 +156,8 @@ const UI = {
             'home': this.elements.homePage,
             'my-courses': this.elements.myCoursesPage,
             'badges': this.elements.badgesPage,
-            'settings': this.elements.settingsPage
+            'settings': this.elements.settingsPage,
+            'battle': document.getElementById('battlePage')
         };
         
         if (pageMap[pageName]) {

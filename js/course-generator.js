@@ -241,6 +241,7 @@ const CourseGenerator = {
         
         this.currentCourse.progress.quizCompleted = true;
         this.currentCourse.progress.quizScore = score;
+        this.currentCourse.progress.quizAnswers = answers;
         this.updateProgressPercentage();
         Storage.saveCourse(this.currentCourse);
         Storage.updateStreak();

@@ -1,0 +1,10 @@
+# robots.txt for coursecreator.mkarjun.com
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://coursecreator.mkarjun.com/sitemap.xml
+
+# Block API endpoints from crawling
+Disallow: /api/
+Disallow: /functions/

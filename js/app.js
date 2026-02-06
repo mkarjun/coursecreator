@@ -30,11 +30,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Check for URL parameters (for sharing courses)
+    // Check for URL parameters (for sharing courses and battles)
     const urlParams = new URLSearchParams(window.location.search);
+    const battleId = urlParams.get('battle');
     const topic = urlParams.get('topic');
-    
-    if (topic) {
+
+    if (battleId) {
+        // Battle mode: load the 1v1 challenge directly
+        Battle.init(battleId);
+    } else if (topic) {
         document.getElementById('topicInput').value = decodeURIComponent(topic);
         UI.handleCreateCourse();
     }
