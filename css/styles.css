@@ -137,6 +137,179 @@ a:hover {
     color: var(--text-secondary);
 }
 
+/* ====== Sidebar Bottom (GitHub + Coffee) ====== */
+.sidebar-bottom {
+    padding: 12px 10px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-github-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    background: linear-gradient(135deg, rgba(36, 41, 47, 0.3), rgba(36, 41, 47, 0.1));
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.sidebar-github-btn:hover {
+    background: linear-gradient(135deg, rgba(36, 41, 47, 0.5), rgba(36, 41, 47, 0.3));
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+.sidebar-github-btn .fab.fa-github {
+    font-size: 18px;
+}
+
+.sidebar-star-icon {
+    margin-left: auto;
+    color: #f0c040;
+    font-size: 12px;
+    animation: starPulse 2s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.sidebar-coffee-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.sidebar-coffee-btn:hover {
+    color: #ffdd00;
+    background: rgba(255, 221, 0, 0.08);
+}
+
+/* Collapsed sidebar: hide text */
+.sidebar.collapsed .sidebar-bottom span {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-github-btn,
+.sidebar.collapsed .sidebar-coffee-btn {
+    justify-content: center;
+    padding: 10px;
+}
+
+.sidebar.collapsed .sidebar-star-icon {
+    display: none;
+}
+
+/* ====== Open Source Banner (Home Page) ====== */
+.open-source-banner {
+    margin-top: 60px;
+    padding: 40px;
+    background: linear-gradient(135deg, rgba(var(--accent-primary-rgb, 0, 255, 163), 0.05), rgba(var(--accent-secondary-rgb, 0, 209, 255), 0.05));
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.oss-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: var(--accent-gradient);
+    border-radius: 20px;
+    color: #000;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.oss-badge i {
+    font-size: 14px;
+}
+
+.oss-text {
+    color: var(--text-secondary);
+    font-size: 15px;
+    max-width: 550px;
+    margin: 0 auto 24px;
+    line-height: 1.6;
+}
+
+.oss-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.oss-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.oss-btn-star {
+    background: #24292e;
+    color: #fff;
+    border: 1px solid #444;
+}
+
+.oss-btn-star:hover {
+    background: #2d333b;
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.oss-btn-contribute {
+    background: transparent;
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-primary);
+}
+
+.oss-btn-contribute:hover {
+    background: rgba(0, 255, 163, 0.1);
+    transform: translateY(-2px);
+}
+
+.oss-btn-coffee {
+    background: #ffdd00;
+    color: #000;
+    border: 1px solid #ffdd00;
+    font-weight: 700;
+}
+
+.oss-btn-coffee:hover {
+    background: #ffe94a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 221, 0, 0.3);
+}
+
 .sidebar-menu li:hover {
     background: var(--bg-card);
     color: var(--text-primary);
