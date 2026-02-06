@@ -105,7 +105,8 @@ const ApiService = {
             
             return parsed;
         } catch (error) {
-            console.error('Course generation error:', error);
+            console.error('Course generation error:', error.message);
+            console.log('⚡ Falling back to demo course content');
             return this.getDemoCourseContent(topic);
         }
     },
@@ -126,7 +127,8 @@ const ApiService = {
             console.log('📊 Questions:', parsed.quiz?.map(q => q.question));
             return parsed.quiz || [];
         } catch (error) {
-            console.error('Quiz generation error:', error);
+            console.error('Quiz generation error:', error.message);
+            console.log('⚡ Falling back to demo quiz');
             return this.getDemoQuiz(topic);
         }
     },
@@ -142,13 +144,25 @@ const ApiService = {
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Gemini API error: ${response.status} - ${errorData.error || 'Unknown'}`);
+                // Safely try to parse error body (might not be JSON for 502/503 etc)
+                let errorMsg = `HTTP ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMsg = typeof errorData.error === 'string' 
+                        ? errorData.error 
+                        : errorData.error?.message || JSON.stringify(errorData.error) || errorMsg;
+                } catch (jsonErr) {
+                    // Response wasn't JSON (e.g., Cloudflare HTML error page)
+                    console.warn('Could not parse error response as JSON');
+                }
+                console.error(`❌ Gemini API error (${type}): ${response.status} - ${errorMsg}`);
+                throw new Error(`Gemini API error: ${response.status} - ${errorMsg}`);
             }
+            
             const data = await response.json();
             
             if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-                console.error('❌ Invalid Gemini response:', data);
+                console.error('❌ Invalid Gemini response:', JSON.stringify(data).substring(0, 500));
                 throw new Error('Invalid Gemini response structure');
             }
             return data;

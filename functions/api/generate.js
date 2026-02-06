@@ -58,7 +58,21 @@ export async function onRequestPost(context) {
             }
         );
 
-        const data = await response.json();
+        // Safely parse response - Gemini might return non-JSON for some errors
+        let data;
+        const responseText = await response.text();
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseErr) {
+            // Gemini returned non-JSON (HTML error page, etc.)
+            return new Response(JSON.stringify({ 
+                error: `Gemini returned non-JSON (HTTP ${response.status})`,
+                detail: responseText.substring(0, 200)
+            }), {
+                status: response.status || 502,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
         
         return new Response(JSON.stringify(data), {
             status: response.status,

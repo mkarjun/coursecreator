@@ -15,15 +15,33 @@ const CourseGenerator = {
         try {
             // Step 1: Generate course content FIRST (AI provides lesson search queries)
             UI.updateLoadingStep(1);
-            const content = await ApiService.generateCourseContent(topic, difficulty, domain);
+            let content;
+            try {
+                content = await ApiService.generateCourseContent(topic, difficulty, domain);
+            } catch (contentErr) {
+                console.warn('Step 1 failed, using demo content:', contentErr.message);
+                content = ApiService.getDemoCourseContent(topic);
+            }
             
             // Step 2: Search YouTube using AI-provided queries + algorithmic scoring
             UI.updateLoadingStep(2);
-            const lessonVideos = await this.fetchSmartVideos(topic, content.lessons, difficulty);
+            let lessonVideos;
+            try {
+                lessonVideos = await this.fetchSmartVideos(topic, content.lessons, difficulty);
+            } catch (videoErr) {
+                console.warn('Step 2 failed, using empty videos:', videoErr.message);
+                lessonVideos = content.lessons.map(() => []);
+            }
             
             // Step 3: Generate quiz separately (better model)
             UI.updateLoadingStep(3);
-            const quiz = await ApiService.generateQuiz(topic);
+            let quiz;
+            try {
+                quiz = await ApiService.generateQuiz(topic);
+            } catch (quizErr) {
+                console.warn('Step 3 failed, using demo quiz:', quizErr.message);
+                quiz = ApiService.getDemoQuiz(topic);
+            }
             
             // Step 4: Build final course
             UI.updateLoadingStep(4);
