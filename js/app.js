@@ -125,5 +125,5 @@ window.addEventListener('beforeunload', () => {
 
 // Console welcome message
 console.log('%c🎓 Course Creator', 'font-size: 24px; font-weight: bold; color: #00d4aa;');
-console.log('%cTransform any topic into a structured learning experience!', 'color: #a0aec0;');
+console.log('%cTurn any topic into a complete course in seconds!', 'color: #a0aec0;');
 console.log('%cTip: Press Ctrl+K to quickly search for a topic', 'color: #718096;');
