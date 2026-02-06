@@ -15,9 +15,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (Auth.isLoggedIn() && !Auth.isGuest()) {
         DatabaseService.init(Auth.currentUser, false);
         
-        // Sync user and load courses from D1 database
+        // Sync user and restore courses from D1 database
+        // restoreUserData() inside syncUserToDatabase handles full course restoration
+        // (including content, progress, video timestamps)
         await Auth.syncUserToDatabase(Auth.currentUser);
-        await Storage.loadFromDatabase();
         
         // Re-render with fresh data from database
         UI.renderMyCourses();
