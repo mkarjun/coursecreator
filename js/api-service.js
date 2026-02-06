@@ -67,9 +67,19 @@ const ApiService = {
     },
     
     // Generate course content (without quiz) using Gemini
-    async generateCourseContent(topic) {
+    // Now accepts difficulty and domain for smarter, more targeted generation
+    async generateCourseContent(topic, difficulty = 'intermediate', domain = null) {
         try {
-            const prompt = CONFIG.COURSE_PROMPT.replace(/\{\{TOPIC\}\}/g, topic);
+            // Build domain context string
+            const domainContext = domain && domain.name !== 'general'
+                ? `Domain: ${domain.name}. Tailor all content specifically to the ${domain.name} field.`
+                : 'Determine the most relevant field for this topic and tailor content accordingly.';
+            
+            const prompt = CONFIG.COURSE_PROMPT
+                .replace(/\{\{TOPIC\}\}/g, topic)
+                .replace(/\{\{DIFFICULTY\}\}/g, difficulty)
+                .replace('{{DOMAIN_CONTEXT}}', domainContext);
+            
             const data = await this._callGeminiAPI(prompt, 'course');
             
             // Parse JSON from response
@@ -79,6 +89,20 @@ const ApiService = {
             const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [null, content];
             const parsed = JSON.parse(jsonMatch[1] || content);
             console.log('✅ Course content parsed:', parsed.lessons?.length, 'lessons');
+            
+            // Validate that lessons have searchQuery fields
+            if (parsed.lessons) {
+                parsed.lessons.forEach((lesson, i) => {
+                    if (!lesson.searchQuery) {
+                        // Algorithmic fallback: build a query from lesson title
+                        lesson.searchQuery = TopicIntelligence.buildLessonQuery(
+                            topic, lesson.title, lesson.keyPoints, difficulty
+                        );
+                        console.log(`⚡ Built algorithmic query for lesson ${i + 1}:`, lesson.searchQuery);
+                    }
+                });
+            }
+            
             return parsed;
         } catch (error) {
             console.error('Course generation error:', error);
@@ -215,7 +239,8 @@ The journey begins with understanding the basic terminology and concepts. We'll 
                         'Historical development and key milestones',
                         'Fundamental theories and principles',
                         'Real-world applications of basic concepts'
-                    ]
+                    ],
+                    searchQuery: `${topic} fundamentals basics introduction tutorial`
                 },
                 {
                     title: 'Core Methodologies',
@@ -227,7 +252,8 @@ You'll learn about best practices, common patterns, and the tools that are widel
                         'Best practices in the field',
                         'Tools and technologies used',
                         'Problem-solving frameworks'
-                    ]
+                    ],
+                    searchQuery: `${topic} techniques methods how to guide`
                 },
                 {
                     title: 'Applications & Challenges',
@@ -239,7 +265,8 @@ From cutting-edge research to everyday applications, you'll gain insights into h
                         'Current challenges and limitations',
                         'Future trends and possibilities',
                         'Ethical considerations'
-                    ]
+                    ],
+                    searchQuery: `${topic} practical applications examples real world`
                 },
                 {
                     title: 'Advanced Concepts & Future Directions',
@@ -251,7 +278,8 @@ You'll gain insights into where ${topic} is heading and how you can continue you
                         'Emerging trends and technologies',
                         'Research frontiers',
                         'Continuing education resources'
-                    ]
+                    ],
+                    searchQuery: `${topic} advanced concepts deep dive expert`
                 }
             ],
             

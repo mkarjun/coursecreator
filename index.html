@@ -71,6 +71,42 @@
             </div>
         </header>
 
+        <!-- Topic Refinement Panel (shown for vague/broad topics) -->
+        <div class="refinement-panel hidden" id="refinementPanel">
+            <div class="refinement-content">
+                <button class="refinement-close" id="refinementClose">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="refinement-header">
+                    <i class="fas fa-compass"></i>
+                    <h2>Let's focus your learning</h2>
+                </div>
+                <p class="refinement-subtitle">
+                    "<span id="refinementTopic" class="gradient-text"></span>" is a broad topic. 
+                    Pick a focus area for a more relevant course:
+                </p>
+                <div class="refinement-chips" id="refinementChips">
+                    <!-- Chips generated dynamically by UI.showRefinement() -->
+                </div>
+                <div class="refinement-difficulty">
+                    <span class="difficulty-label">Difficulty level:</span>
+                    <div class="difficulty-buttons">
+                        <button class="diff-btn" data-difficulty="beginner">🌱 Beginner</button>
+                        <button class="diff-btn active" data-difficulty="intermediate">📚 Intermediate</button>
+                        <button class="diff-btn" data-difficulty="advanced">🚀 Advanced</button>
+                    </div>
+                </div>
+                <div class="refinement-actions">
+                    <button class="btn-primary" id="refinementGenerate">
+                        <i class="fas fa-magic"></i> Generate Course
+                    </button>
+                    <button class="refinement-skip" id="refinementSkip">
+                        Use original topic →
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Home Page -->
         <section class="page active" id="homePage">
             <div class="hero-section">
@@ -351,16 +387,16 @@
                 <p id="loadingText">Generating your course...</p>
                 <div class="loading-steps">
                     <div class="loading-step" id="step1">
-                        <i class="fas fa-search"></i> Searching for videos...
-                    </div>
-                    <div class="loading-step" id="step2">
                         <i class="fas fa-brain"></i> Generating course structure...
                     </div>
+                    <div class="loading-step" id="step2">
+                        <i class="fas fa-search"></i> Finding the best videos...
+                    </div>
                     <div class="loading-step" id="step3">
-                        <i class="fas fa-file-alt"></i> Creating notes...
+                        <i class="fas fa-question-circle"></i> Creating quiz questions...
                     </div>
                     <div class="loading-step" id="step4">
-                        <i class="fas fa-question-circle"></i> Preparing quizzes...
+                        <i class="fas fa-check-circle"></i> Building your course...
                     </div>
                 </div>
             </div>
@@ -369,6 +405,7 @@
 
     <script src="js/env.js"></script>
     <script src="js/config.js"></script>
+    <script src="js/topic-intelligence.js"></script>
     <script src="js/api-service.js"></script>
     <script src="js/database-service.js"></script>
     <script src="js/storage.js"></script>

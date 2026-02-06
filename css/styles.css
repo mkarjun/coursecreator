@@ -388,6 +388,171 @@ a:hover {
     margin: 0 auto 40px;
 }
 
+/* ===== Topic Refinement Panel ===== */
+.refinement-panel {
+    margin: 0 20px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    animation: refinementSlideIn 0.35s ease;
+}
+
+@keyframes refinementSlideIn {
+    from { opacity: 0; transform: translateY(-15px); max-height: 0; }
+    to { opacity: 1; transform: translateY(0); max-height: 600px; }
+}
+
+.refinement-content {
+    padding: 30px 35px;
+    position: relative;
+}
+
+.refinement-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+}
+
+.refinement-close:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+}
+
+.refinement-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.refinement-header i {
+    font-size: 22px;
+    color: var(--accent-primary);
+}
+
+.refinement-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.refinement-subtitle {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.refinement-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.refinement-chip {
+    padding: 10px 18px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: 50px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.refinement-chip:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+}
+
+.refinement-chip.selected {
+    border-color: var(--accent-primary);
+    background: rgba(0, 212, 170, 0.12);
+    color: var(--accent-primary);
+    font-weight: 600;
+    box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+.refinement-difficulty {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+.difficulty-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.diff-btn {
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.diff-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.diff-btn.active {
+    border-color: var(--accent-primary);
+    background: rgba(0, 212, 170, 0.12);
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+.refinement-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.refinement-actions .btn-primary {
+    padding: 12px 24px;
+    font-size: 15px;
+}
+
+.refinement-skip {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 4px;
+    transition: color var(--transition-fast);
+}
+
+.refinement-skip:hover {
+    color: var(--accent-primary);
+}
+
 /* ===== Topic Suggestions ===== */
 .topic-suggestions {
     margin-bottom: 50px;
@@ -1438,6 +1603,47 @@ a:hover {
     
     .hero-section {
         padding: 30px 15px;
+    }
+    
+    .refinement-panel {
+        margin: 0 10px 15px;
+    }
+    
+    .refinement-content {
+        padding: 20px 18px;
+    }
+    
+    .refinement-header h2 {
+        font-size: 17px;
+    }
+    
+    .refinement-chips {
+        gap: 8px;
+    }
+    
+    .refinement-chip {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+    
+    .refinement-difficulty {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .refinement-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .refinement-actions .btn-primary {
+        justify-content: center;
+    }
+    
+    .refinement-skip {
+        text-align: center;
     }
     
     .hero-section h1 {

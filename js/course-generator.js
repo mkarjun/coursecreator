@@ -1,23 +1,25 @@
 // Course Generator Module - Orchestrates course creation
+// Now integrates TopicIntelligence for algorithmic + AI synergy
 
 const CourseGenerator = {
     currentCourse: null,
     
     // Generate a complete course for a topic
-    async generateCourse(topic) {
+    // Accepts optional difficulty and domain from the refinement step
+    async generateCourse(topic, difficulty = 'intermediate', domain = null) {
         const courseId = `course_${Date.now()}`;
         
         // Show loading overlay
-        UI.showLoading('Searching for videos...');
+        UI.showLoading('Generating course structure...');
         
         try {
-            // Step 1: Search for videos for each lesson
+            // Step 1: Generate course content FIRST (AI provides lesson search queries)
             UI.updateLoadingStep(1);
-            const lessonVideos = await this.fetchVideosForLessons(topic);
+            const content = await ApiService.generateCourseContent(topic, difficulty, domain);
             
-            // Step 2: Generate course content (AI) - no quiz
+            // Step 2: Search YouTube using AI-provided queries + algorithmic scoring
             UI.updateLoadingStep(2);
-            const content = await ApiService.generateCourseContent(topic);
+            const lessonVideos = await this.fetchSmartVideos(topic, content.lessons, difficulty);
             
             // Step 3: Generate quiz separately (better model)
             UI.updateLoadingStep(3);
@@ -56,7 +58,33 @@ const CourseGenerator = {
         }
     },
     
-    // Fetch videos for all lessons
+    // NEW: Fetch videos using AI-provided search queries + algorithmic ranking
+    async fetchSmartVideos(topic, lessons, difficulty) {
+        const allLessonVideos = [];
+        
+        for (const lesson of lessons) {
+            // Use AI-provided searchQuery, with algorithmic fallback
+            const query = lesson.searchQuery || 
+                TopicIntelligence.buildLessonQuery(topic, lesson.title, lesson.keyPoints, difficulty);
+            
+            console.log(`🔍 Searching videos for "${lesson.title}": "${query}"`);
+            
+            // Fetch a larger pool for scoring (fetch more, keep best)
+            const poolSize = CONFIG.SEARCH_POOL_SIZE || 8;
+            const rawVideos = await ApiService.searchYouTubeVideos(query, poolSize);
+            
+            // Score and rank algorithmically
+            const rankedVideos = TopicIntelligence.rankVideos(rawVideos, topic, lesson.title);
+            
+            // Keep the top N
+            allLessonVideos.push(rankedVideos.slice(0, CONFIG.MAX_VIDEOS_PER_LESSON));
+        }
+        
+        // Deduplicate: same video shouldn't appear in multiple lessons
+        return TopicIntelligence.deduplicateAcrossLessons(allLessonVideos);
+    },
+    
+    // KEPT for backward compatibility — falls back to static structure
     async fetchVideosForLessons(topic) {
         const lessonVideos = [];
         

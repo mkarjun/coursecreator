@@ -65,6 +65,7 @@ window.CourseGenerator = CourseGenerator;
 window.ApiService = ApiService;
 window.Storage = Storage;
 window.DatabaseService = DatabaseService;
+window.TopicIntelligence = TopicIntelligence;
 
 // Handle share buttons
 document.addEventListener('click', (e) => {

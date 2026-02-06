@@ -171,7 +171,7 @@ const UI = {
         if (pageName === 'badges') this.renderBadges();
     },
     
-    // Handle create course button
+    // Handle create course button — now integrates topic analysis and refinement
     async handleCreateCourse() {
         const topic = this.elements.topicInput.value.trim();
         if (!topic) {
@@ -179,11 +179,141 @@ const UI = {
             return;
         }
         
+        // Instant algorithmic analysis (no API call)
+        const analysis = TopicIntelligence.analyze(topic);
+        console.log('🧠 Topic analysis:', analysis);
+        
+        let finalTopic = topic;
+        let difficulty = analysis.estimatedDifficulty;
+        let domain = analysis.domain;
+        
+        // If the topic is vague, show refinement panel and wait for user choice
+        if (analysis.needsRefinement && analysis.suggestedSubtopics.length > 0) {
+            try {
+                const refined = await this.showRefinement(analysis);
+                finalTopic = refined.topic;
+                difficulty = refined.difficulty;
+                // Re-analyze the refined topic for accurate domain
+                const refinedAnalysis = TopicIntelligence.analyze(finalTopic);
+                domain = refinedAnalysis.domain;
+            } catch (e) {
+                // User cancelled refinement
+                return;
+            }
+        }
+        
         try {
-            await CourseGenerator.generateCourse(topic);
+            await CourseGenerator.generateCourse(finalTopic, difficulty, domain);
         } catch (error) {
             console.error('Failed to create course:', error);
         }
+    },
+    
+    // Show the topic refinement panel (returns a Promise)
+    showRefinement(analysis) {
+        return new Promise((resolve, reject) => {
+            const panel = document.getElementById('refinementPanel');
+            if (!panel) {
+                // No panel in DOM, skip refinement
+                resolve({ topic: analysis.original, difficulty: analysis.estimatedDifficulty });
+                return;
+            }
+            
+            // Populate panel content
+            document.getElementById('refinementTopic').textContent = analysis.original;
+            
+            // Build subtopic chips
+            const chipsContainer = document.getElementById('refinementChips');
+            chipsContainer.innerHTML = analysis.suggestedSubtopics.map(subtopic => 
+                `<button class="refinement-chip" data-subtopic="${subtopic}">${subtopic}</button>`
+            ).join('');
+            
+            // Set difficulty buttons
+            const diffButtons = document.querySelectorAll('.diff-btn');
+            diffButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.difficulty === analysis.estimatedDifficulty);
+            });
+            
+            // Track selected state
+            let selectedTopic = null;
+            let selectedDifficulty = analysis.estimatedDifficulty;
+            
+            // Update the generate button text
+            const genBtn = document.getElementById('refinementGenerate');
+            const updateGenButton = () => {
+                const display = selectedTopic || analysis.original;
+                genBtn.innerHTML = `<i class="fas fa-magic"></i> Generate: ${display.length > 40 ? display.substring(0, 37) + '...' : display}`;
+            };
+            updateGenButton();
+            
+            // Chip click handlers
+            chipsContainer.querySelectorAll('.refinement-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    chipsContainer.querySelectorAll('.refinement-chip').forEach(c => c.classList.remove('selected'));
+                    chip.classList.add('selected');
+                    selectedTopic = chip.dataset.subtopic;
+                    updateGenButton();
+                });
+            });
+            
+            // Difficulty button handlers
+            diffButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    diffButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedDifficulty = btn.dataset.difficulty;
+                });
+            });
+            
+            // Generate button
+            const handleGenerate = () => {
+                cleanup();
+                panel.classList.add('hidden');
+                resolve({ 
+                    topic: selectedTopic || analysis.original, 
+                    difficulty: selectedDifficulty 
+                });
+            };
+            
+            // Skip button (use original topic)
+            const skipBtn = document.getElementById('refinementSkip');
+            const handleSkip = () => {
+                cleanup();
+                panel.classList.add('hidden');
+                resolve({ 
+                    topic: analysis.original, 
+                    difficulty: selectedDifficulty 
+                });
+            };
+            
+            // Close/cancel button
+            const closeBtn = document.getElementById('refinementClose');
+            const handleClose = () => {
+                cleanup();
+                panel.classList.add('hidden');
+                reject(new Error('cancelled'));
+            };
+            
+            // Cleanup event listeners
+            const cleanup = () => {
+                genBtn.removeEventListener('click', handleGenerate);
+                skipBtn?.removeEventListener('click', handleSkip);
+                closeBtn?.removeEventListener('click', handleClose);
+            };
+            
+            genBtn.addEventListener('click', handleGenerate);
+            skipBtn?.addEventListener('click', handleSkip);
+            closeBtn?.addEventListener('click', handleClose);
+            
+            // Show panel
+            panel.classList.remove('hidden');
+        });
+    },
+    
+    // Hide refinement panel
+    hideRefinement() {
+        const panel = document.getElementById('refinementPanel');
+        if (panel) panel.classList.add('hidden');
     },
     
     // Show loading overlay
@@ -211,8 +341,8 @@ const UI = {
         });
         
         const messages = [
-            'Searching for videos...',
-            'Generating course content...',
+            'Generating course structure...',
+            'Finding the best videos...',
             'Creating quiz questions...',
             'Building your course...'
         ];

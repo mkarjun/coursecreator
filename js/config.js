@@ -22,17 +22,20 @@ const CONFIG = {
         API_KEYS: 'courseCreator_apiKeys'
     },
     
-    // Optimized Course Prompt - Lean, no quiz (separate request)
-    COURSE_PROMPT: `Create educational course JSON for "{{TOPIC}}".
+    // Dynamic Course Prompt - includes domain context and requests per-lesson search queries
+    COURSE_PROMPT: `Create an educational course on "{{TOPIC}}" at {{DIFFICULTY}} level.
+{{DOMAIN_CONTEXT}}
 
-JSON format:
-{"difficulty":"beginner|intermediate|advanced","introduction":"150 words about {{TOPIC}}","lessons":[{"title":"Title","description":"200 words","keyPoints":["point1","point2","point3"]}],"notes":"# {{TOPIC}} Notes\\n500 words markdown summary"}
+Return ONLY this JSON:
+{"difficulty":"{{DIFFICULTY}}","introduction":"engaging 150-word introduction about {{TOPIC}}","lessons":[{"title":"Specific lesson title","description":"200-word in-depth explanation","keyPoints":["specific point 1","specific point 2","specific point 3"],"searchQuery":"targeted YouTube search query for this exact lesson topic"}],"notes":"# {{TOPIC}} Study Notes\\n500-word comprehensive markdown study guide"}
 
-Requirements:
-- 4 lessons progressing from basics to advanced
-- Each lesson: clear title, description, 3 key points
-- Notes: comprehensive markdown study guide
-- Valid JSON only, no extra text`,
+Critical rules:
+- Exactly 4 lessons, each covering a DISTINCT subtopic of {{TOPIC}}
+- Lessons must progress logically from foundational to advanced within {{DIFFICULTY}} level
+- Each lesson MUST have a searchQuery field: a specific YouTube search phrase (6-12 words) that would find high-quality educational videos for THAT particular lesson's content
+- The searchQuery should NOT just repeat the course topic — it must be specific to the lesson (e.g., for a Python course, lesson 1 might search "python variables data types beginner tutorial" while lesson 3 searches "python functions arguments return values explained")
+- Key points must be concrete facts or concepts, not vague advice
+- Valid JSON only, no markdown wrapping`,`,
 
     // Separate Quiz Prompt - Strict factual questions only
     QUIZ_PROMPT: `You are a quiz generator. Generate exactly 5 multiple choice questions that test FACTUAL KNOWLEDGE about {{TOPIC}}.
@@ -119,7 +122,10 @@ Generate 5 factual {{TOPIC}} questions NOW:`,
         }
     ],
     
-    // Course Structure Template
+    // Extra videos to fetch per lesson for algorithmic scoring (top N kept)
+    SEARCH_POOL_SIZE: 8,
+    
+    // Fallback Course Structure (used only when AI doesn't provide search queries)
     COURSE_STRUCTURE: {
         lessons: [
             { title: 'Foundational Principles', searchSuffix: 'basics introduction fundamentals' },
