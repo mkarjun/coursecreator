@@ -342,15 +342,34 @@ const DatabaseService = {
             const data = await this.getAllUserData();
             
             if (data.courses && data.courses.length > 0) {
+                // Debug: log what the API returned
+                console.log('📦 Raw API courses:', data.courses.map(c => ({
+                    id: c.id, title: c.title,
+                    hasContent: !!c.content,
+                    contentType: typeof c.content,
+                    contentKeys: c.content ? Object.keys(c.content) : 'null',
+                    hasIntro: !!c.content?.introduction,
+                    lessonsCount: c.content?.lessons?.length || 0,
+                    quizCount: c.content?.quiz?.length || 0
+                })));
+                
                 // Restore courses to localStorage using correct key
-                const formattedCourses = data.courses.map(c => ({
+                const formattedCourses = data.courses.map(c => {
+                    // Safety: content might be a string if double-encoded
+                    let content = c.content;
+                    if (typeof content === 'string') {
+                        try { content = JSON.parse(content); } catch(e) { content = {}; }
+                    }
+                    content = content || {};
+                    
+                    return {
                     id: c.id,
                     topic: c.topic,
                     title: c.title,
-                    introduction: c.content?.introduction,
-                    lessons: c.content?.lessons,
-                    quiz: c.content?.quiz,
-                    notes: c.content?.notes,
+                    introduction: content.introduction,
+                    lessons: content.lessons,
+                    quiz: content.quiz,
+                    notes: content.notes,
                     difficulty: c.difficulty,
                     progress: c.progress || {
                         percentage: 0,
@@ -363,7 +382,16 @@ const DatabaseService = {
                     videoTimestamps: c.videoTimestamps,
                     createdAt: c.createdAt,
                     lastAccessed: c.lastAccessed
-                }));
+                }});
+                
+                // Debug: verify what's being saved
+                console.log('💾 Formatted courses for localStorage:', formattedCourses.map(c => ({
+                    id: c.id, title: c.title,
+                    hasIntro: !!c.introduction,
+                    lessonsCount: c.lessons?.length || 0,
+                    quizCount: c.quiz?.length || 0,
+                    progress: c.progress?.percentage
+                })));
                 
                 localStorage.setItem(CONFIG.STORAGE_KEYS.COURSES, JSON.stringify(formattedCourses));
                 console.log(`✅ Restored ${formattedCourses.length} courses from database`);

@@ -270,11 +270,19 @@ async function getAllUserData(db, userId) {
         .bind(userId).first();
     
     // Transform courses to app format
-    const formattedCourses = (courses.results || []).map(c => ({
+    const formattedCourses = (courses.results || []).map(c => {
+        let content;
+        try {
+            content = typeof c.content === 'string' ? JSON.parse(c.content) : (c.content || {});
+        } catch (e) {
+            console.error('Failed to parse content for course', c.id, e);
+            content = {};
+        }
+        return {
         id: c.id,
         topic: c.topic,
         title: c.title,
-        content: JSON.parse(c.content),
+        content,
         difficulty: c.difficulty,
         createdAt: c.created_at,
         lastAccessed: c.last_accessed,
@@ -287,7 +295,7 @@ async function getAllUserData(db, userId) {
             quizScore: c.quiz_score
         },
         videoTimestamps: timestampsByCourse[c.id] || {}
-    }));
+    }});
     
     return jsonResponse({
         courses: formattedCourses,
