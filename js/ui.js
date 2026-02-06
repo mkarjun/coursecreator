@@ -899,6 +899,12 @@ const UI = {
     
     // Render my courses page
     renderMyCourses() {
+        // Guard: don't render if UI elements aren't cached yet (called before init)
+        if (!this.elements || !this.elements.coursesGrid) {
+            console.warn('⚠️ renderMyCourses called before UI.init(), skipping');
+            return;
+        }
+        
         const isAuthenticated = Storage.isAuthenticated();
         const courses = Storage.getCourses();
         
@@ -926,7 +932,7 @@ const UI = {
                             ${courses.map(course => `
                                 <div class="session-course-item" onclick="CourseGenerator.loadCourse('${course.id}')">
                                     <span>${course.title}</span>
-                                    <span>${course.progress.percentage}%</span>
+                                    <span>${course.progress?.percentage || 0}%</span>
                                 </div>
                             `).join('')}
                         </div>
@@ -953,9 +959,9 @@ const UI = {
                 <div class="course-card-body">
                     <div class="course-card-progress">
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${course.progress.percentage}%"></div>
+                            <div class="progress-fill" style="width: ${course.progress?.percentage || 0}%"></div>
                         </div>
-                        <span>${course.progress.percentage}% complete</span>
+                        <span>${course.progress?.percentage || 0}% complete</span>
                     </div>
                     <div class="course-card-actions">
                         <button class="btn-secondary" onclick="event.stopPropagation(); CourseGenerator.loadCourse('${course.id}')">

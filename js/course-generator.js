@@ -160,6 +160,17 @@ const CourseGenerator = {
     loadCourse(courseId) {
         const course = Storage.getCourse(courseId);
         if (course) {
+            // Ensure progress object exists (safety net for DB-restored courses)
+            if (!course.progress) {
+                course.progress = {
+                    percentage: 0,
+                    completedLessons: [],
+                    watchedVideos: [],
+                    introCompleted: false,
+                    quizCompleted: false,
+                    quizScore: null
+                };
+            }
             this.currentCourse = course;
             course.lastAccessed = new Date().toISOString();
             Storage.saveCourse(course);

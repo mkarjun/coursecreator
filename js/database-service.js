@@ -352,7 +352,14 @@ const DatabaseService = {
                     quiz: c.content?.quiz,
                     notes: c.content?.notes,
                     difficulty: c.difficulty,
-                    progress: c.progress,
+                    progress: c.progress || {
+                        percentage: 0,
+                        completedLessons: [],
+                        watchedVideos: [],
+                        introCompleted: false,
+                        quizCompleted: false,
+                        quizScore: null
+                    },
                     videoTimestamps: c.videoTimestamps,
                     createdAt: c.createdAt,
                     lastAccessed: c.lastAccessed
