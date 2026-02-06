@@ -88,13 +88,33 @@ const StudyDuo = {
         const creatorName = user?.name || 'Study Buddy';
         const creatorId = user?.id || null;
 
-        // Build a shareable version of the course (full data for instant load)
+        // Build a LIGHTWEIGHT shareable version — strip video thumbnails/metadata
+        const lightLessons = (course.lessons || []).map(l => ({
+            id: l.id,
+            number: l.number,
+            title: l.title,
+            description: l.description,
+            keyPoints: l.keyPoints,
+            videos: (l.videos || []).map(v => ({
+                id: v.id,
+                title: v.title,
+                channelTitle: v.channelTitle,
+                thumbnail: v.thumbnail,
+                viewCount: v.viewCount,
+            })),
+        }));
+
         const courseData = {
             topic: course.topic,
             title: course.title,
             introduction: course.introduction,
-            lessons: course.lessons,
-            quiz: course.quiz,
+            lessons: lightLessons,
+            quiz: (course.quiz || []).map(q => ({
+                question: q.question,
+                options: q.options,
+                correctIndex: q.correctIndex,
+                explanation: q.explanation,
+            })),
             notes: course.notes,
         };
 
@@ -115,6 +135,13 @@ const StudyDuo = {
             });
 
             const result = await res.json();
+            console.log('Duo API response:', result);
+
+            if (!res.ok) {
+                alert(`Study duo error: ${result.error || 'Server error ' + res.status}`);
+                return;
+            }
+
             if (result.duoId) {
                 // Store duo context so quiz completion can report back
                 this.currentDuo = {
@@ -127,11 +154,11 @@ const StudyDuo = {
                 sessionStorage.setItem('activeDuo', JSON.stringify(this.currentDuo));
                 this.showShareDialog(result.duoId, course.topic);
             } else {
-                alert('Failed to create study duo. Please try again.');
+                alert(`Study duo failed: ${result.error || 'Unknown error'}`);
             }
         } catch (e) {
             console.error('Duo create error:', e);
-            alert('Failed to create study duo. Please try again.');
+            alert('Network error creating study duo: ' + e.message);
         } finally {
             if (btn) {
                 btn.disabled = false;

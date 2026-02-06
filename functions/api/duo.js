@@ -22,13 +22,21 @@ export async function onRequestPost(context) {
     const { request, env } = context;
 
     try {
-        const { action, data } = await request.json();
+        const body = await request.json();
+        const action = body.action;
+        const data = body.data || {};
 
         if (!env.DB) {
             return jsonResponse({ error: 'Database not configured' }, 500);
         }
 
-        await ensureDuoTable(env.DB);
+        // Create table if needed (wrapped in try-catch to not block)
+        try {
+            await ensureDuoTable(env.DB);
+        } catch (tableErr) {
+            console.error('Table creation warning:', tableErr);
+            // Table might already exist, continue
+        }
 
         switch (action) {
             case 'create':
@@ -38,11 +46,11 @@ export async function onRequestPost(context) {
             case 'quiz_complete':
                 return await handleQuizComplete(env.DB, env, data);
             default:
-                return jsonResponse({ error: 'Invalid action' }, 400);
+                return jsonResponse({ error: 'Invalid action: ' + action }, 400);
         }
     } catch (error) {
-        console.error('Duo API error:', error);
-        return jsonResponse({ error: error.message }, 500);
+        console.error('Duo API error:', error.message, error.stack);
+        return jsonResponse({ error: 'Server error: ' + error.message }, 500);
     }
 }
 
@@ -72,24 +80,30 @@ async function ensureDuoTable(db) {
 // Create a new study duo — stores the full course for the partner
 async function createDuo(db, data) {
     if (!data.topic || !data.courseData) {
-        return jsonResponse({ error: 'Missing required fields' }, 400);
+        return jsonResponse({ error: 'Missing required fields: topic and courseData are required' }, 400);
     }
 
     const id = generateDuoId();
+    const courseJson = typeof data.courseData === 'string' ? data.courseData : JSON.stringify(data.courseData);
 
-    await db.prepare(`
-        INSERT INTO study_duos (id, creator_name, creator_id, topic, course_title, course_data, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'waiting')
-    `).bind(
-        id,
-        data.creatorName || 'Study Buddy',
-        data.creatorId || null,
-        data.topic,
-        data.courseTitle || data.topic,
-        JSON.stringify(data.courseData)
-    ).run();
+    try {
+        await db.prepare(`
+            INSERT INTO study_duos (id, creator_name, creator_id, topic, course_title, course_data, status)
+            VALUES (?, ?, ?, ?, ?, ?, 'waiting')
+        `).bind(
+            id,
+            data.creatorName || 'Study Buddy',
+            data.creatorId || null,
+            data.topic,
+            data.courseTitle || data.topic,
+            courseJson
+        ).run();
 
-    return jsonResponse({ duoId: id, success: true });
+        return jsonResponse({ duoId: id, success: true });
+    } catch (insertErr) {
+        console.error('Duo insert error:', insertErr.message);
+        return jsonResponse({ error: 'Failed to save duo: ' + insertErr.message }, 500);
+    }
 }
 
 // Get duo data — partner loads the shared course from here
