@@ -35,7 +35,7 @@ Critical rules:
 - Each lesson MUST have a searchQuery field: a specific YouTube search phrase (6-12 words) that would find high-quality educational videos for THAT particular lesson's content
 - The searchQuery should NOT just repeat the course topic — it must be specific to the lesson (e.g., for a Python course, lesson 1 might search "python variables data types beginner tutorial" while lesson 3 searches "python functions arguments return values explained")
 - Key points must be concrete facts or concepts, not vague advice
-- Valid JSON only, no markdown wrapping`,`,
+- Valid JSON only, no markdown wrapping`,
 
     // Separate Quiz Prompt - Strict factual questions only
     QUIZ_PROMPT: `You are a quiz generator. Generate exactly 5 multiple choice questions that test FACTUAL KNOWLEDGE about {{TOPIC}}.

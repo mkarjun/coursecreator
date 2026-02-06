@@ -61,23 +61,29 @@ const CourseGenerator = {
     // NEW: Fetch videos using AI-provided search queries + algorithmic ranking
     async fetchSmartVideos(topic, lessons, difficulty) {
         const allLessonVideos = [];
+        const poolSize = (typeof CONFIG !== 'undefined' && CONFIG.SEARCH_POOL_SIZE) || 8;
+        const maxPerLesson = (typeof CONFIG !== 'undefined' && CONFIG.MAX_VIDEOS_PER_LESSON) || 4;
         
         for (const lesson of lessons) {
-            // Use AI-provided searchQuery, with algorithmic fallback
-            const query = lesson.searchQuery || 
-                TopicIntelligence.buildLessonQuery(topic, lesson.title, lesson.keyPoints, difficulty);
-            
-            console.log(`🔍 Searching videos for "${lesson.title}": "${query}"`);
-            
-            // Fetch a larger pool for scoring (fetch more, keep best)
-            const poolSize = CONFIG.SEARCH_POOL_SIZE || 8;
-            const rawVideos = await ApiService.searchYouTubeVideos(query, poolSize);
-            
-            // Score and rank algorithmically
-            const rankedVideos = TopicIntelligence.rankVideos(rawVideos, topic, lesson.title);
-            
-            // Keep the top N
-            allLessonVideos.push(rankedVideos.slice(0, CONFIG.MAX_VIDEOS_PER_LESSON));
+            try {
+                // Use AI-provided searchQuery, with algorithmic fallback
+                const query = lesson.searchQuery || 
+                    TopicIntelligence.buildLessonQuery(topic, lesson.title, lesson.keyPoints, difficulty);
+                
+                console.log(`🔍 Searching videos for "${lesson.title}": "${query}"`);
+                
+                // Fetch a larger pool for scoring (fetch more, keep best)
+                const rawVideos = await ApiService.searchYouTubeVideos(query, poolSize);
+                
+                // Score and rank algorithmically
+                const rankedVideos = TopicIntelligence.rankVideos(rawVideos, topic, lesson.title);
+                
+                // Keep the top N
+                allLessonVideos.push(rankedVideos.slice(0, maxPerLesson));
+            } catch (err) {
+                console.warn(`⚠️ Video fetch failed for "${lesson.title}":`, err);
+                allLessonVideos.push([]);  // empty lesson videos — don't kill the course
+            }
         }
         
         // Deduplicate: same video shouldn't appear in multiple lessons
