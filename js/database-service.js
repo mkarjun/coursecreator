@@ -126,15 +126,22 @@ const DatabaseService = {
         
         if (data.error) return null;
         
+        // Safe content parsing (handles string vs object)
+        let content = data.content;
+        if (typeof content === 'string') {
+            try { content = JSON.parse(content); } catch(e) { content = {}; }
+        }
+        content = content || {};
+        
         // Transform from DB format to app format
         return {
             id: data.id,
             topic: data.topic,
             title: data.title,
-            introduction: data.content.introduction,
-            lessons: data.content.lessons,
-            quiz: data.content.quiz,
-            notes: data.content.notes,
+            introduction: content.introduction,
+            lessons: content.lessons,
+            quiz: content.quiz,
+            notes: content.notes,
             difficulty: data.difficulty,
             progress: data.progress,
             createdAt: data.created_at,

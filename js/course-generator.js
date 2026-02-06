@@ -157,8 +157,27 @@ const CourseGenerator = {
     },
     
     // Load an existing course
-    loadCourse(courseId) {
-        const course = Storage.getCourse(courseId);
+    async loadCourse(courseId) {
+        let course = Storage.getCourse(courseId);
+        
+        // If course has no lessons (content was lost), try fetching fresh from D1
+        if (course && (!course.lessons || course.lessons.length === 0)) {
+            console.warn('⚠️ Course missing content, fetching from D1...', courseId);
+            try {
+                if (window.DatabaseService && !DatabaseService.isGuestMode()) {
+                    const freshData = await DatabaseService.getCourse(courseId);
+                    if (freshData && freshData.lessons && freshData.lessons.length > 0) {
+                        // Merge: keep local progress, use fresh content
+                        course = { ...freshData, progress: course.progress || freshData.progress };
+                        Storage.saveCourse(course);
+                        console.log('✅ Restored course content from D1');
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to fetch course from D1:', e);
+            }
+        }
+        
         if (course) {
             // Ensure progress object exists (safety net for DB-restored courses)
             if (!course.progress) {

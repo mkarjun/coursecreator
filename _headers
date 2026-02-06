@@ -1,5 +1,11 @@
 # Cloudflare Pages custom headers
 
+# HTML pages - never cache, always get fresh
+/
+  Cache-Control: no-cache, must-revalidate
+/index.html
+  Cache-Control: no-cache, must-revalidate
+
 # JS files - no aggressive caching, always revalidate
 /js/*
   Cache-Control: public, max-age=0, must-revalidate

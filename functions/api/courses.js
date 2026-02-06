@@ -96,9 +96,17 @@ async function getCourse(db, courseId, userId) {
     const progress = await db.prepare('SELECT * FROM progress WHERE course_id = ? AND user_id = ?')
         .bind(courseId, userId).first();
     
+    let parsedContent;
+    try {
+        parsedContent = typeof course.content === 'string' ? JSON.parse(course.content) : (course.content || {});
+    } catch (e) {
+        console.error('Failed to parse content for course', courseId, e);
+        parsedContent = {};
+    }
+    
     return jsonResponse({
         ...course,
-        content: JSON.parse(course.content),
+        content: parsedContent,
         progress: progress ? {
             percentage: progress.percentage,
             completedLessons: JSON.parse(progress.completed_lessons || '[]'),
