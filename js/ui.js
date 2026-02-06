@@ -743,39 +743,152 @@ const UI = {
                 <i class="fas fa-file-alt"></i>
                 <div class="resource-info">
                     <h4>Course Notes</h4>
-                    <span>Text Document</span>
+                    <span>Download as Text</span>
                 </div>
             </div>
-            <div class="resource-card" onclick="UI.showNotesModal()">
-                <i class="fas fa-book-open"></i>
+            <div class="resource-card" onclick="UI.showNotesModal('guide')">
+                <i class="fas fa-map-signs"></i>
                 <div class="resource-info">
-                    <h4>Study Guide</h4>
-                    <span>View Online</span>
+                    <h4>Study Roadmap</h4>
+                    <span>Learning Path & Guide</span>
+                </div>
+            </div>
+            <div class="resource-card" onclick="UI.showNotesModal('community')">
+                <i class="fas fa-users"></i>
+                <div class="resource-info">
+                    <h4>Communities</h4>
+                    <span>Reddit, Forums & More</span>
                 </div>
             </div>
         `;
     },
     
-    // Show notes modal
-    showNotesModal() {
+    // Show notes modal with tabbed view
+    showNotesModal(initialTab = 'guide') {
         const course = CourseGenerator.getCurrentCourse();
         if (!course) return;
         
-        // Convert markdown-style notes to HTML
-        let notes = course.notes || '';
-        notes = notes
-            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+        // Build the study guide HTML
+        const guideHtml = this._renderStudyGuide(course.notes || '');
+        
+        // Build the community resources HTML
+        const analysis = typeof TopicIntelligence !== 'undefined' 
+            ? TopicIntelligence.analyze(course.topic) 
+            : null;
+        const communities = typeof TopicIntelligence !== 'undefined' 
+            ? TopicIntelligence.getCommunities(course.topic, analysis?.domain)
+            : [];
+        const communityHtml = this._renderCommunities(communities, course.topic);
+        
+        this.elements.notesContent.innerHTML = `
+            <div class="notes-tabs">
+                <button class="notes-tab ${initialTab === 'guide' ? 'active' : ''}" data-tab="guide">
+                    <i class="fas fa-map-signs"></i> Study Roadmap
+                </button>
+                <button class="notes-tab ${initialTab === 'community' ? 'active' : ''}" data-tab="community">
+                    <i class="fas fa-users"></i> Communities
+                </button>
+            </div>
+            <div class="notes-tab-content ${initialTab === 'guide' ? 'active' : ''}" id="tabGuide">
+                ${guideHtml}
+            </div>
+            <div class="notes-tab-content ${initialTab === 'community' ? 'active' : ''}" id="tabCommunity">
+                ${communityHtml}
+            </div>
+        `;
+        
+        // Tab switching
+        this.elements.notesContent.querySelectorAll('.notes-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                this.elements.notesContent.querySelectorAll('.notes-tab').forEach(t => t.classList.remove('active'));
+                this.elements.notesContent.querySelectorAll('.notes-tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                const target = tab.dataset.tab === 'guide' ? 'tabGuide' : 'tabCommunity';
+                document.getElementById(target).classList.add('active');
+            });
+        });
+        
+        this.elements.notesModal.classList.add('active');
+    },
+    
+    // Render markdown study guide to structured HTML
+    _renderStudyGuide(notes) {
+        if (!notes) return '<p>No study guide available.</p>';
+        
+        let html = notes
+            // Headers
+            .replace(/^# (.*$)/gm, '<h1 class="guide-title">$1</h1>')
+            .replace(/^## (.*$)/gm, '<h2 class="guide-phase">$1</h2>')
+            .replace(/^### (.*$)/gm, '<h3 class="guide-section">$1</h3>')
+            // Bold and italic
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            // List items (gather consecutive <li> into <ul>)
             .replace(/^- (.*$)/gm, '<li>$1</li>')
             .replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
+            // Paragraphs
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
         
-        this.elements.notesContent.innerHTML = `<p>${notes}</p>`;
-        this.elements.notesModal.classList.add('active');
+        // Wrap consecutive <li> items in <ul>
+        html = html.replace(/(<li>.*?<\/li>(?:<br>)?)+/gs, (match) => {
+            const items = match.replace(/<br>/g, '');
+            return `<ul class="guide-list">${items}</ul>`;
+        });
+        
+        return `<div class="study-guide">${html}</div>`;
+    },
+    
+    // Render community resources
+    _renderCommunities(communities, topic) {
+        if (!communities || communities.length === 0) {
+            return `<div class="community-empty">
+                <i class="fas fa-globe"></i>
+                <p>No specific communities found. Try searching Reddit for <strong>r/${topic.replace(/\s+/g, '')}</strong></p>
+            </div>`;
+        }
+        
+        const typeIcons = {
+            reddit: 'fab fa-reddit-alien',
+            discord: 'fab fa-discord',
+            forum: 'fas fa-comments',
+            resource: 'fas fa-external-link-alt'
+        };
+        
+        const typeColors = {
+            reddit: '#ff4500',
+            discord: '#5865f2',
+            forum: '#4caf50',
+            resource: '#2196f3'
+        };
+        
+        const cardsHtml = communities.map(c => `
+            <a href="${c.url}" target="_blank" rel="noopener noreferrer" class="community-card">
+                <div class="community-icon" style="color: ${typeColors[c.type] || '#999'}">
+                    <i class="${typeIcons[c.type] || 'fas fa-globe'}"></i>
+                </div>
+                <div class="community-info">
+                    <h4>${c.name}</h4>
+                    <p>${c.desc}</p>
+                    ${c.members && c.members !== '—' ? `<span class="community-members"><i class="fas fa-users"></i> ${c.members} members</span>` : ''}
+                </div>
+                <i class="fas fa-arrow-right community-arrow"></i>
+            </a>
+        `).join('');
+        
+        return `
+            <div class="communities-container">
+                <p class="communities-intro">
+                    <i class="fas fa-lightbulb"></i>
+                    Join these communities to ask questions, share progress, and connect with others learning <strong>${topic}</strong>.
+                </p>
+                ${cardsHtml}
+                <p class="communities-tip">
+                    <i class="fas fa-info-circle"></i>
+                    Tip: Lurk first to understand the community culture, then start by answering beginner questions — it's the best way to solidify your knowledge.
+                </p>
+            </div>
+        `;
     },
     
     // Hide notes modal

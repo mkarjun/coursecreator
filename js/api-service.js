@@ -355,42 +355,119 @@ You'll gain insights into where ${topic} is heading and how you can continue you
                 }
             ],
             
-            notes: `# ${topic} - Complete Study Notes
-
-## Introduction
-${topic} is a fascinating field that combines theory with practical applications. This document provides comprehensive notes covering all the key concepts from the course.
-
-## Lesson 1: Foundational Principles
-- **Core Concepts**: Understanding the basic terminology and definitions is crucial for building a strong foundation.
-- **Historical Context**: The field has evolved significantly over the years, with key milestones shaping its current form.
-- **Fundamental Theories**: These theories provide the framework for understanding how ${topic} works.
-
-## Lesson 2: Core Methodologies
-- **Approaches**: Various methodologies exist for tackling ${topic}-related challenges.
-- **Best Practices**: Following established best practices ensures consistency and quality.
-- **Tools**: Familiarize yourself with the common tools used in the field.
-
-## Lesson 3: Applications & Challenges
-- **Real-World Applications**: ${topic} has numerous applications across different industries.
-- **Current Challenges**: Understanding limitations helps in developing better solutions.
-- **Ethical Considerations**: Always consider the ethical implications of your work.
-
-## Lesson 4: Advanced Concepts
-- **Emerging Trends**: Stay updated with the latest developments in the field.
-- **Future Directions**: The field continues to evolve with new research and discoveries.
-
-## Key Takeaways
-1. Build a strong foundation by understanding core principles
-2. Practice regularly to reinforce your learning
-3. Stay curious and continue exploring advanced topics
-4. Apply your knowledge to real-world problems
-
-## Additional Resources
-- Online courses and tutorials
-- Research papers and publications
-- Community forums and discussion groups
-- Hands-on projects and exercises`
+            notes: this._buildSmartNotes(topic)
         };
+    },
+    
+    // Build structured, topic-specific study notes algorithmically
+    _buildSmartNotes(topic) {
+        const analysis = typeof TopicIntelligence !== 'undefined' ? TopicIntelligence.analyze(topic) : null;
+        const domain = analysis?.domain?.name || 'general';
+        const difficulty = analysis?.estimatedDifficulty || 'intermediate';
+        
+        // Get domain-specific data for building real notes
+        const domainData = typeof TopicIntelligence !== 'undefined' ? TopicIntelligence.domains[domain] : null;
+        const subtopics = domainData?.subtopics?._default || [];
+        const searchMods = domainData?.searchModifiers || [];
+        
+        // Build prerequisite text based on domain
+        const prereqs = {
+            programming: `- Basic understanding of how computers work (files, folders, running programs)\n- A text editor or IDE installed (VS Code recommended)\n- Willingness to practice by writing actual code\n- Basic problem-solving and logical thinking skills`,
+            data_science: `- Python fundamentals (variables, loops, functions)\n- Basic statistics (mean, median, standard deviation)\n- Familiarity with spreadsheets and tabular data\n- Understanding of basic algebra and graphing`,
+            finance: `- Basic arithmetic and percentage calculations\n- Understanding of income, expenses and savings concepts\n- Awareness of common financial products (bank accounts, credit cards)\n- Willingness to track and analyze numbers`,
+            science: `- Basic scientific method understanding (hypothesis → experiment → conclusion)\n- Comfort with mathematical notation and formulas\n- Curiosity about how natural phenomena work\n- Ability to read and interpret graphs and charts`,
+            business: `- General understanding of how businesses create and deliver value\n- Basic communication and writing skills\n- Familiarity with common business terms (revenue, profit, margin)\n- Interest in problem-solving and strategy`,
+            design: `- Visual awareness and attention to detail\n- A design tool installed (Figma is free and recommended)\n- Basic understanding of color, layout and typography\n- Willingness to study and critique existing designs`,
+            health: `- Basic understanding of human body systems\n- No prior medical knowledge required\n- Open mindset toward evidence-based information\n- Commitment to applying concepts consistently`,
+            math: `- Arithmetic fluency (addition, subtraction, multiplication, division)\n- Basic algebra (solving for x, order of operations)\n- Ability to read and interpret graphs\n- Pen/paper or digital notebook for working through problems`,
+            language: `- No prior knowledge of the target language required\n- A notebook or flashcard system for vocabulary\n- Audio/video playback capability for listening practice\n- 15-30 minutes daily for consistent practice`,
+            music: `- Access to your chosen instrument (or a piano/keyboard app)\n- Basic ability to hear differences in pitch (high vs low)\n- Patience for repetitive practice exercises\n- A metronome app for rhythm practice`,
+            history: `- General timeline awareness (ancient → medieval → modern → contemporary)\n- Interest in understanding cause and effect across eras\n- Willingness to read primary and secondary sources\n- Note-taking tools for organizing events and themes`,
+            philosophy: `- Curiosity about fundamental questions (What is real? What is right?)\n- Comfort with abstract thinking and ambiguity\n- Willingness to consider perspectives you disagree with\n- Basic logical reasoning skills`
+        };
+        
+        const prereqText = prereqs[domain] || `- General interest in ${topic}\n- Basic reading and research skills\n- A notebook for capturing key ideas\n- Willingness to explore and practice`;
+        
+        // Build phase content from lesson data
+        const lessonTitles = [
+            `Foundational Principles of ${topic}`,
+            `Core Methodologies in ${topic}`,
+            `Practical Applications of ${topic}`,
+            `Advanced Concepts in ${topic}`
+        ];
+        
+        // Build "What to Learn Next" from domain subtopics
+        const nextTopics = subtopics.slice(0, 4).map(st => `- **${st}**: Deepens your understanding and opens new career/skill paths`).join('\n');
+        const fallbackNext = `- Advanced ${topic} techniques and specializations\n- Related fields that complement ${topic}\n- Real-world project building with ${topic}\n- Industry certifications in ${topic}`;
+        
+        return `# ${topic} — Learning Roadmap & Study Guide
+
+## Prerequisites
+${prereqText}
+
+## Phase 1: Foundation
+### What You'll Learn
+This phase covers the fundamental concepts and terminology of ${topic}. You'll build the mental models needed to understand everything that follows.
+### Key Focus Areas
+- Core terminology and definitions specific to ${topic}
+- Historical context and why ${topic} matters today
+- The fundamental principles that everything else builds on
+- How ${topic} fits into the broader field of ${domain !== 'general' ? domain.replace('_', ' ') : 'this subject area'}
+### Practice
+- Create a glossary of 10-15 key terms as you learn them
+- Explain the basics of ${topic} to someone else in simple language
+- Find 3 real-world examples of ${topic} in action
+
+## Phase 2: Core Skills & Methods
+### What You'll Learn
+This phase focuses on the practical methodologies and techniques used in ${topic}. You'll move from theory to hands-on application.
+### Key Focus Areas
+- Standard approaches and workflows used by professionals
+- Common tools, frameworks and resources for ${topic}
+- Best practices that separate beginners from intermediates
+- Problem-solving patterns specific to this field
+### Practice
+- Follow along with a guided tutorial or exercise
+- Apply one methodology to a simple problem from scratch
+- Compare different approaches and note their trade-offs
+
+## Phase 3: Real-World Application
+### What You'll Learn
+This phase connects ${topic} to real-world scenarios. You'll see how the concepts and methods apply in actual practice.
+### Key Focus Areas
+- Industry use cases and case studies
+- Common challenges practitioners face and how to overcome them
+- How to evaluate quality and effectiveness in ${topic}
+- Integration with related tools and workflows
+### Practice
+- Start a small project applying what you've learned
+- Analyze an existing real-world example critically
+- Document your process and decisions as you work
+
+## Phase 4: Advanced & Beyond
+### What You'll Learn
+This final phase pushes into advanced territory and prepares you for continued growth beyond this course.
+### Key Focus Areas
+- Advanced techniques that require solid fundamentals
+- Current trends and emerging developments in ${topic}
+- How experts think about and approach ${topic}
+- Specialization paths and career applications
+### Practice
+- Tackle a challenging problem that combines multiple concepts
+- Contribute to a community discussion or help a beginner
+- Create a personal learning plan for your next 30 days
+
+## Quick Reference
+- Start with fundamentals — don't skip ahead even if it feels basic
+- ${topic} is best learned through active practice, not passive consumption
+- Take notes in your own words, not copy-paste
+- Revisit difficult concepts after 24-48 hours (spaced repetition)
+- Connect new concepts to things you already know
+- Build small projects to cement your understanding
+- Join a community to get feedback and stay motivated
+
+## What To Learn Next
+${nextTopics || fallbackNext}`;
     },
     
     // Format ISO 8601 duration to readable format

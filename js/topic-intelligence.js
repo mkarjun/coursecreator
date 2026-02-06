@@ -207,6 +207,186 @@ const TopicIntelligence = {
         }
     },
 
+    // ============ COMMUNITY RESOURCES ============
+    // Curated, high-quality communities per domain — no API needed
+    
+    communities: {
+        programming: [
+            { name: 'r/learnprogramming', url: 'https://reddit.com/r/learnprogramming', type: 'reddit', desc: '4M+ members helping each other learn to code', members: '4.2M' },
+            { name: 'r/programming', url: 'https://reddit.com/r/programming', type: 'reddit', desc: 'News, discussion and deep dives on programming topics', members: '6.1M' },
+            { name: 'Stack Overflow', url: 'https://stackoverflow.com', type: 'forum', desc: 'The largest Q&A platform for developers worldwide', members: '22M+' },
+            { name: 'DEV Community', url: 'https://dev.to', type: 'forum', desc: 'Developer blog platform with tutorials and discussions', members: '1M+' },
+            { name: 'Hacker News', url: 'https://news.ycombinator.com', type: 'forum', desc: 'Tech news and deep technical discussions', members: '300K+' }
+        ],
+        programming_specific: {
+            'python': [
+                { name: 'r/learnpython', url: 'https://reddit.com/r/learnpython', type: 'reddit', desc: 'Beginner-friendly Python help community', members: '900K' },
+                { name: 'r/Python', url: 'https://reddit.com/r/Python', type: 'reddit', desc: 'Python news, projects and discussions', members: '1.3M' },
+                { name: 'Python Discord', url: 'https://pythondiscord.com', type: 'discord', desc: 'Active Discord with help channels and code review', members: '350K' }
+            ],
+            'javascript': [
+                { name: 'r/javascript', url: 'https://reddit.com/r/javascript', type: 'reddit', desc: 'JavaScript news, frameworks and best practices', members: '2.4M' },
+                { name: 'r/learnjavascript', url: 'https://reddit.com/r/learnjavascript', type: 'reddit', desc: 'Help forum for JavaScript learners', members: '400K' }
+            ],
+            'react': [
+                { name: 'r/reactjs', url: 'https://reddit.com/r/reactjs', type: 'reddit', desc: 'React ecosystem discussions and help', members: '400K' },
+                { name: 'Reactiflux Discord', url: 'https://www.reactiflux.com', type: 'discord', desc: 'Largest React community on Discord', members: '200K' }
+            ],
+            'web': [
+                { name: 'r/webdev', url: 'https://reddit.com/r/webdev', type: 'reddit', desc: 'Web development news and career discussion', members: '2.1M' },
+                { name: 'r/Frontend', url: 'https://reddit.com/r/Frontend', type: 'reddit', desc: 'Frontend-specific techniques and tools', members: '200K' }
+            ],
+            'java': [
+                { name: 'r/java', url: 'https://reddit.com/r/java', type: 'reddit', desc: 'Java ecosystem discussions', members: '300K' },
+                { name: 'r/learnjava', url: 'https://reddit.com/r/learnjava', type: 'reddit', desc: 'Beginner-friendly Java learning community', members: '150K' }
+            ],
+            'rust': [
+                { name: 'r/rust', url: 'https://reddit.com/r/rust', type: 'reddit', desc: 'The Rust programming language community', members: '300K' },
+                { name: 'Rust Users Forum', url: 'https://users.rust-lang.org', type: 'forum', desc: 'Official Rust community forum', members: '50K+' }
+            ],
+            'docker': [
+                { name: 'r/docker', url: 'https://reddit.com/r/docker', type: 'reddit', desc: 'Docker and container discussions', members: '200K' },
+                { name: 'Docker Community Forums', url: 'https://forums.docker.com', type: 'forum', desc: 'Official Docker community forums', members: '100K+' }
+            ],
+            'sql': [
+                { name: 'r/SQL', url: 'https://reddit.com/r/SQL', type: 'reddit', desc: 'SQL help and database discussions', members: '150K' },
+                { name: 'DBA Stack Exchange', url: 'https://dba.stackexchange.com', type: 'forum', desc: 'Database administration Q&A', members: '200K+' }
+            ]
+        },
+        data_science: [
+            { name: 'r/datascience', url: 'https://reddit.com/r/datascience', type: 'reddit', desc: 'Data science careers, projects and discussion', members: '1.1M' },
+            { name: 'r/MachineLearning', url: 'https://reddit.com/r/MachineLearning', type: 'reddit', desc: 'Research papers, discussions and ML news', members: '2.8M' },
+            { name: 'r/learnmachinelearning', url: 'https://reddit.com/r/learnmachinelearning', type: 'reddit', desc: 'Beginner-friendly ML learning community', members: '350K' },
+            { name: 'Kaggle Community', url: 'https://kaggle.com/discussions', type: 'forum', desc: 'Competitions, datasets and notebooks community', members: '15M+' },
+            { name: 'Hugging Face Forums', url: 'https://discuss.huggingface.co', type: 'forum', desc: 'NLP, LLMs and transformer model discussions', members: '50K+' }
+        ],
+        finance: [
+            { name: 'r/personalfinance', url: 'https://reddit.com/r/personalfinance', type: 'reddit', desc: 'Budgeting, saving, investing and financial planning', members: '18M' },
+            { name: 'r/investing', url: 'https://reddit.com/r/investing', type: 'reddit', desc: 'Long-term investing strategies and analysis', members: '2.3M' },
+            { name: 'r/financialindependence', url: 'https://reddit.com/r/financialindependence', type: 'reddit', desc: 'FIRE movement and wealth building strategies', members: '2.1M' },
+            { name: 'Bogleheads Forum', url: 'https://bogleheads.org/forum', type: 'forum', desc: 'Evidence-based investing discussion (index funds focused)', members: '200K+' },
+            { name: 'Investopedia', url: 'https://investopedia.com', type: 'resource', desc: 'Comprehensive financial education and definitions', members: '—' }
+        ],
+        finance_specific: {
+            'crypto': [
+                { name: 'r/CryptoCurrency', url: 'https://reddit.com/r/CryptoCurrency', type: 'reddit', desc: 'Crypto market discussion and news', members: '7.3M' },
+                { name: 'r/Bitcoin', url: 'https://reddit.com/r/Bitcoin', type: 'reddit', desc: 'Bitcoin-specific news and analysis', members: '5.8M' }
+            ],
+            'stock': [
+                { name: 'r/stocks', url: 'https://reddit.com/r/stocks', type: 'reddit', desc: 'Stock analysis and market discussion', members: '6.5M' },
+                { name: 'r/ValueInvesting', url: 'https://reddit.com/r/ValueInvesting', type: 'reddit', desc: 'Warren Buffett style value investing', members: '200K' }
+            ],
+            'trading': [
+                { name: 'r/Daytrading', url: 'https://reddit.com/r/Daytrading', type: 'reddit', desc: 'Day trading strategies and setups', members: '1.3M' },
+                { name: 'r/options', url: 'https://reddit.com/r/options', type: 'reddit', desc: 'Options trading discussion', members: '1.1M' }
+            ],
+            'accounting': [
+                { name: 'r/Accounting', url: 'https://reddit.com/r/Accounting', type: 'reddit', desc: 'Accounting careers and knowledge', members: '400K' }
+            ]
+        },
+        science: [
+            { name: 'r/askscience', url: 'https://reddit.com/r/askscience', type: 'reddit', desc: 'Expert-moderated science Q&A', members: '25M' },
+            { name: 'r/science', url: 'https://reddit.com/r/science', type: 'reddit', desc: 'Peer-reviewed research discussion', members: '31M' },
+            { name: 'Physics Forums', url: 'https://physicsforums.com', type: 'forum', desc: 'Science & math discussion with experts', members: '500K+' },
+            { name: 'ResearchGate', url: 'https://researchgate.net', type: 'forum', desc: 'Academic research sharing and Q&A', members: '25M+' }
+        ],
+        business: [
+            { name: 'r/Entrepreneur', url: 'https://reddit.com/r/Entrepreneur', type: 'reddit', desc: 'Startup ideas, advice and experiences', members: '3.4M' },
+            { name: 'r/smallbusiness', url: 'https://reddit.com/r/smallbusiness', type: 'reddit', desc: 'Small business operations and growth', members: '1.5M' },
+            { name: 'r/marketing', url: 'https://reddit.com/r/marketing', type: 'reddit', desc: 'Marketing strategies and career discussion', members: '600K' },
+            { name: 'Indie Hackers', url: 'https://indiehackers.com', type: 'forum', desc: 'Bootstrapped business community and interviews', members: '100K+' },
+            { name: 'GrowthHackers', url: 'https://growthhackers.com/posts', type: 'forum', desc: 'Growth marketing experiments and case studies', members: '50K+' }
+        ],
+        design: [
+            { name: 'r/web_design', url: 'https://reddit.com/r/web_design', type: 'reddit', desc: 'Web design inspiration and critique', members: '800K' },
+            { name: 'r/UI_Design', url: 'https://reddit.com/r/UI_Design', type: 'reddit', desc: 'UI design portfolios and feedback', members: '150K' },
+            { name: 'r/graphic_design', url: 'https://reddit.com/r/graphic_design', type: 'reddit', desc: 'Graphic design discussion and portfolios', members: '1.1M' },
+            { name: 'Dribbble', url: 'https://dribbble.com', type: 'resource', desc: 'Design portfolio platform and inspiration', members: '10M+' },
+            { name: 'Figma Community', url: 'https://figma.com/community', type: 'forum', desc: 'Free design files, plugins and templates', members: '5M+' }
+        ],
+        health: [
+            { name: 'r/Fitness', url: 'https://reddit.com/r/Fitness', type: 'reddit', desc: 'Exercise, nutrition and fitness discussion', members: '11M' },
+            { name: 'r/nutrition', url: 'https://reddit.com/r/nutrition', type: 'reddit', desc: 'Evidence-based nutrition discussion', members: '3.5M' },
+            { name: 'r/Meditation', url: 'https://reddit.com/r/Meditation', type: 'reddit', desc: 'Meditation practice and techniques', members: '1.4M' },
+            { name: 'r/mentalhealth', url: 'https://reddit.com/r/mentalhealth', type: 'reddit', desc: 'Mental health support and resources', members: '1.1M' },
+            { name: 'Examine.com', url: 'https://examine.com', type: 'resource', desc: 'Evidence-based supplement and nutrition research', members: '—' }
+        ],
+        math: [
+            { name: 'r/learnmath', url: 'https://reddit.com/r/learnmath', type: 'reddit', desc: 'Math help from basic to advanced', members: '400K' },
+            { name: 'r/math', url: 'https://reddit.com/r/math', type: 'reddit', desc: 'Pure and applied mathematics discussion', members: '2.1M' },
+            { name: 'Math Stack Exchange', url: 'https://math.stackexchange.com', type: 'forum', desc: 'Largest Q&A site for math questions', members: '2M+' },
+            { name: 'Art of Problem Solving', url: 'https://artofproblemsolving.com/community', type: 'forum', desc: 'Problem solving and competition math', members: '500K+' }
+        ],
+        language: [
+            { name: 'r/languagelearning', url: 'https://reddit.com/r/languagelearning', type: 'reddit', desc: 'Tips, tools and motivation for language learners', members: '1.5M' },
+            { name: 'r/linguistics', url: 'https://reddit.com/r/linguistics', type: 'reddit', desc: 'Scientific study of language', members: '350K' },
+            { name: 'HiNative', url: 'https://hinative.com', type: 'forum', desc: 'Ask native speakers questions about any language', members: '10M+' },
+            { name: 'iTalki Community', url: 'https://italki.com', type: 'resource', desc: 'Find language exchange partners and tutors', members: '20M+' }
+        ],
+        music: [
+            { name: 'r/musictheory', url: 'https://reddit.com/r/musictheory', type: 'reddit', desc: 'Music theory questions and analysis', members: '400K' },
+            { name: 'r/WeAreTheMusicMakers', url: 'https://reddit.com/r/WeAreTheMusicMakers', type: 'reddit', desc: 'Music production, recording and composition', members: '2.4M' },
+            { name: 'r/Guitar', url: 'https://reddit.com/r/Guitar', type: 'reddit', desc: 'Guitar playing, gear and learning', members: '2M' },
+            { name: 'Gearslutz (Gearspace)', url: 'https://gearspace.com', type: 'forum', desc: 'Professional audio production forum', members: '500K+' }
+        ],
+        history: [
+            { name: 'r/AskHistorians', url: 'https://reddit.com/r/AskHistorians', type: 'reddit', desc: 'Expert-level historical Q&A (strictly moderated)', members: '1.9M' },
+            { name: 'r/history', url: 'https://reddit.com/r/history', type: 'reddit', desc: 'History articles, discussions and media', members: '17M' },
+            { name: 'Historum', url: 'https://historum.com', type: 'forum', desc: 'History discussion forum by era and region', members: '50K+' }
+        ],
+        philosophy: [
+            { name: 'r/philosophy', url: 'https://reddit.com/r/philosophy', type: 'reddit', desc: 'Philosophical articles and discussions', members: '17M' },
+            { name: 'r/askphilosophy', url: 'https://reddit.com/r/askphilosophy', type: 'reddit', desc: 'Expert-answered philosophy questions', members: '400K' },
+            { name: 'r/Stoicism', url: 'https://reddit.com/r/Stoicism', type: 'reddit', desc: 'Stoic philosophy practice and discussion', members: '900K' },
+            { name: 'Philosophy Stack Exchange', url: 'https://philosophy.stackexchange.com', type: 'forum', desc: 'Philosophy Q&A with expert answers', members: '100K+' }
+        ],
+        _general: [
+            { name: 'r/learnprogramming', url: 'https://reddit.com/r/learnprogramming', type: 'reddit', desc: 'General learning and programming community', members: '4.2M' },
+            { name: 'r/IWantToLearn', url: 'https://reddit.com/r/IWantToLearn', type: 'reddit', desc: 'Community for learning any new skill', members: '1.2M' },
+            { name: 'r/GetStudying', url: 'https://reddit.com/r/GetStudying', type: 'reddit', desc: 'Study tips, motivation and accountability', members: '500K' },
+            { name: 'Khan Academy', url: 'https://khanacademy.org', type: 'resource', desc: 'Free courses on math, science, computing and more', members: '—' }
+        ]
+    },
+
+    // Get community resources for a topic + domain
+    getCommunities(topic, domain) {
+        const normalized = topic.toLowerCase();
+        const domainName = domain?.name || 'general';
+        
+        let results = [];
+        
+        // 1. Check for topic-specific communities first
+        const specificKey = `${domainName}_specific`;
+        if (this.communities[specificKey]) {
+            for (const [keyword, comms] of Object.entries(this.communities[specificKey])) {
+                if (normalized.includes(keyword)) {
+                    results.push(...comms);
+                }
+            }
+        }
+        
+        // 2. Add domain-level communities
+        if (this.communities[domainName]) {
+            results.push(...this.communities[domainName]);
+        }
+        
+        // 3. If we still have few results, add general communities
+        if (results.length < 3) {
+            results.push(...(this.communities._general || []));
+        }
+        
+        // Deduplicate by URL
+        const seen = new Set();
+        results = results.filter(c => {
+            if (seen.has(c.url)) return false;
+            seen.add(c.url);
+            return true;
+        });
+        
+        // Return top 5 most relevant
+        return results.slice(0, 5);
+    },
+
     // Terms that are too broad on their own
     vagueTerms: new Set([
         'financial', 'finance', 'business', 'technology', 'tech', 'science', 'health',

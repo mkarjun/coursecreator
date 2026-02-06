@@ -1402,6 +1402,251 @@ a:hover {
     line-height: 1.8;
 }
 
+/* ===== Notes Modal Tabs ===== */
+.notes-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border-color);
+    margin: -20px -20px 20px;
+    padding: 0 20px;
+    background: var(--bg-secondary);
+    position: sticky;
+    top: -20px;
+    z-index: 5;
+}
+
+.notes-tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.notes-tab:hover {
+    color: var(--text-primary);
+}
+
+.notes-tab.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+}
+
+.notes-tab i {
+    font-size: 13px;
+}
+
+.notes-tab-content {
+    display: none;
+}
+
+.notes-tab-content.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+/* ===== Study Guide ===== */
+.study-guide {
+    font-size: 14px;
+    line-height: 1.75;
+}
+
+.study-guide .guide-title {
+    font-size: 22px;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accent-primary);
+}
+
+.study-guide .guide-phase {
+    font-size: 17px;
+    color: var(--accent-primary);
+    margin-top: 28px;
+    margin-bottom: 12px;
+    padding: 8px 14px;
+    background: rgba(139, 92, 246, 0.08);
+    border-left: 3px solid var(--accent-primary);
+    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+}
+
+.study-guide .guide-section {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+    opacity: 0.85;
+}
+
+.study-guide .guide-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 16px;
+}
+
+.study-guide .guide-list li {
+    padding: 6px 0 6px 24px;
+    position: relative;
+    line-height: 1.6;
+}
+
+.study-guide .guide-list li::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 14px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    opacity: 0.6;
+}
+
+.study-guide p {
+    margin: 8px 0;
+}
+
+/* ===== Community Cards ===== */
+.communities-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.communities-intro {
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: 14px 16px;
+    background: rgba(139, 92, 246, 0.06);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid rgba(139, 92, 246, 0.12);
+    margin-bottom: 4px;
+    line-height: 1.6;
+}
+
+.communities-intro i {
+    color: var(--accent-primary);
+    margin-right: 6px;
+}
+
+.community-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.community-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateX(4px);
+    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.12);
+}
+
+.community-icon {
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.community-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.community-info h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+}
+
+.community-info p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.community-members {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    opacity: 0.7;
+}
+
+.community-members i {
+    font-size: 10px;
+}
+
+.community-arrow {
+    color: var(--text-muted);
+    font-size: 12px;
+    opacity: 0;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.community-card:hover .community-arrow {
+    opacity: 1;
+    color: var(--accent-primary);
+}
+
+.communities-tip {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    margin-top: 8px;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+.communities-tip i {
+    margin-right: 6px;
+    color: var(--accent-secondary);
+}
+
+.community-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.community-empty i {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.3;
+}
+
 /* ===== Video Modal ===== */
 .video-modal-content {
     width: 90%;
@@ -1730,6 +1975,41 @@ a:hover {
     .tab-btn {
         white-space: nowrap;
         flex-shrink: 0;
+    }
+    
+    /* Notes modal mobile */
+    .notes-tabs {
+        margin: -20px -20px 16px;
+        padding: 0 12px;
+    }
+    
+    .notes-tab {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    
+    .community-card {
+        padding: 12px;
+        gap: 10px;
+    }
+    
+    .community-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+    }
+    
+    .community-info h4 {
+        font-size: 13px;
+    }
+    
+    .study-guide .guide-phase {
+        font-size: 15px;
+        padding: 6px 10px;
+    }
+    
+    .resources-grid {
+        grid-template-columns: 1fr;
     }
 }
 
