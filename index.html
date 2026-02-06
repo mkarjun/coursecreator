@@ -282,6 +282,14 @@
                         </button>
                     </div>
 
+                    <div class="sidebar-card duo-sidebar-card">
+                        <h3 class="sidebar-title"><i class="fas fa-user-friends"></i> Study Together</h3>
+                        <button class="btn-duo" id="inviteBuddyBtn" onclick="StudyDuo.createDuo()">
+                            <i class="fas fa-user-friends"></i> Invite Study Buddy
+                        </button>
+                        <p class="duo-sidebar-hint">Share the same course with a friend. Auto-battle when both finish the quiz!</p>
+                    </div>
+
                     <div class="sidebar-card">
                         <h3 class="sidebar-title">Share Course</h3>
                         <div class="share-buttons">
@@ -438,6 +446,51 @@
             </div>
         </div>
 
+        <!-- Study Duo Page (partner landing) -->
+        <section class="page" id="duoPage">
+            <div class="duo-state hidden" id="duoLoading">
+                <div class="duo-loading-card">
+                    <div class="spinner"></div>
+                    <p>Loading study session...</p>
+                </div>
+            </div>
+
+            <div class="duo-state hidden" id="duoLanding">
+                <div class="duo-landing-card">
+                    <div class="duo-icon">🤝</div>
+                    <h1>Study <span class="gradient-text">Together</span></h1>
+                    <div class="duo-invite-info">
+                        <span class="duo-creator-name" id="duoCreatorName"></span>
+                        <span> wants to learn with you!</span>
+                    </div>
+                    <div class="duo-topic-badge" id="duoTopicBadge"></div>
+                    <div class="duo-perks">
+                        <div class="duo-perk"><i class="fas fa-bolt"></i> Same course, loaded instantly</div>
+                        <div class="duo-perk"><i class="fas fa-trophy"></i> Auto 1v1 battle after quiz</div>
+                        <div class="duo-perk"><i class="fas fa-user-shield"></i> No sign-up needed</div>
+                    </div>
+                    <div class="duo-name-input">
+                        <label for="duoPartnerName">Enter your name to join:</label>
+                        <input type="text" id="duoPartnerName" placeholder="Your name..." maxlength="30">
+                    </div>
+                    <button class="btn-primary duo-join-btn" id="duoJoinBtn">
+                        <i class="fas fa-graduation-cap"></i> Join & Start Learning
+                    </button>
+                </div>
+            </div>
+
+            <div class="duo-state hidden" id="duoError">
+                <div class="duo-error-card">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>Study Session Not Found</h2>
+                    <p>This study link may have expired or is invalid.</p>
+                    <button class="btn-primary" onclick="location.href='/'">
+                        <i class="fas fa-home"></i> Go Home
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- Battle Page (1v1 Learning Battles) -->
         <section class="page" id="battlePage">
             <!-- Landing State -->
@@ -537,6 +590,7 @@
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/course-generator.js"></script>
+    <script src="js/duo.js"></script>
     <script src="js/battle.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/app.js"></script>

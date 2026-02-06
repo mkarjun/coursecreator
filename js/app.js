@@ -30,14 +30,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Check for URL parameters (for sharing courses and battles)
+    // Check for URL parameters (for sharing courses, battles, and duos)
     const urlParams = new URLSearchParams(window.location.search);
     const battleId = urlParams.get('battle');
+    const duoId = urlParams.get('duo');
     const topic = urlParams.get('topic');
 
     if (battleId) {
         // Battle mode: load the 1v1 challenge directly
         Battle.init(battleId);
+    } else if (duoId) {
+        // Study Duo mode: partner loads shared course
+        StudyDuo.init(duoId);
     } else if (topic) {
         document.getElementById('topicInput').value = decodeURIComponent(topic);
         UI.handleCreateCourse();
@@ -70,6 +74,8 @@ window.ApiService = ApiService;
 window.Storage = Storage;
 window.DatabaseService = DatabaseService;
 window.TopicIntelligence = TopicIntelligence;
+window.Battle = Battle;
+window.StudyDuo = StudyDuo;
 
 // Handle share buttons
 document.addEventListener('click', (e) => {

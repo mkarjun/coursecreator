@@ -105,6 +105,29 @@ CREATE TABLE IF NOT EXISTS battles (
 CREATE INDEX IF NOT EXISTS idx_battles_status ON battles(status);
 CREATE INDEX IF NOT EXISTS idx_battles_created ON battles(created_at);
 
+-- Study Duos (shared courses with auto-battle)
+CREATE TABLE IF NOT EXISTS study_duos (
+    id TEXT PRIMARY KEY,
+    creator_name TEXT NOT NULL,
+    creator_id TEXT,
+    partner_name TEXT,
+    partner_id TEXT,
+    topic TEXT NOT NULL,
+    course_title TEXT NOT NULL,
+    course_data TEXT NOT NULL,
+    creator_quiz_score INTEGER,
+    creator_quiz_answers TEXT,
+    partner_quiz_score INTEGER,
+    partner_quiz_answers TEXT,
+    battle_id TEXT,
+    status TEXT DEFAULT 'waiting',
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_duos_status ON study_duos(status);
+CREATE INDEX IF NOT EXISTS idx_duos_created ON study_duos(created_at);
+
 -- Data retention: Auto-cleanup view for courses older than 30 days (for inactive users)
 -- This will be used by a cleanup function
 CREATE VIEW IF NOT EXISTS stale_courses AS

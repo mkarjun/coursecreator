@@ -3260,3 +3260,383 @@ a:hover {
         font-size: 2rem;
     }
 }
+
+/* =================================================================
+   STUDY DUO — Learn Together Feature
+   ================================================================= */
+
+/* Duo Page Layout */
+#duoPage.active {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 80vh;
+    padding: 40px 20px;
+}
+
+.duo-state {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    animation: battleFadeIn 0.5s ease;
+}
+
+.duo-state.hidden { display: none; }
+
+/* Duo Loading */
+.duo-loading-card {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-secondary);
+}
+
+/* Duo Landing Card */
+.duo-landing-card {
+    text-align: center;
+    padding: 50px 40px;
+    background: var(--card-bg);
+    border-radius: 24px;
+    border: 1px solid rgba(0, 212, 170, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.duo-icon {
+    font-size: 64px;
+    margin-bottom: 15px;
+}
+
+.duo-landing-card h1 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.duo-invite-info {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.duo-creator-name {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.duo-topic-badge {
+    display: inline-block;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.15), rgba(0, 212, 170, 0.05));
+    border: 1px solid rgba(0, 212, 170, 0.3);
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 10px 0 25px;
+}
+
+/* Duo Perks */
+.duo-perks {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.duo-perk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.duo-perk i {
+    color: var(--primary);
+}
+
+/* Duo Name Input */
+.duo-name-input {
+    max-width: 350px;
+    margin: 0 auto 25px;
+}
+
+.duo-name-input label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.duo-name-input input {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    text-align: center;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.duo-name-input input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.duo-join-btn {
+    font-size: 1.1rem;
+    padding: 16px 40px;
+    border-radius: 14px;
+}
+
+/* Duo Error */
+.duo-error-card {
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--card-bg);
+    border-radius: 24px;
+    border: 1px solid var(--border);
+}
+
+.duo-error-card i {
+    font-size: 48px;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+}
+
+.duo-error-card h2 { margin-bottom: 10px; }
+.duo-error-card p { color: var(--text-secondary); margin-bottom: 25px; }
+
+/* Duo Banner (shown on course page during duo session) */
+.duo-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.12), rgba(0, 212, 170, 0.04));
+    border: 1px solid rgba(0, 212, 170, 0.25);
+    border-radius: 14px;
+    margin: 0 30px 20px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    animation: battleFadeIn 0.5s ease;
+}
+
+.duo-banner i {
+    font-size: 1.3rem;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+/* Duo Battle-Ready / Waiting Banner */
+.duo-battle-banner {
+    margin: 0 30px 20px;
+    animation: battleFadeIn 0.5s ease;
+}
+
+.duo-battle-inner {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.12), rgba(255, 68, 68, 0.06));
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-radius: 14px;
+}
+
+.duo-battle-banner.waiting .duo-battle-inner {
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(0, 212, 170, 0.03));
+    border-color: rgba(0, 212, 170, 0.25);
+}
+
+.duo-battle-icon {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.duo-battle-text {
+    flex: 1;
+}
+
+.duo-battle-text strong {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: 3px;
+}
+
+.duo-battle-text span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.duo-battle-inner .btn-primary {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Duo Sidebar Card (invite buddy button on course page) */
+.duo-sidebar-card {
+    text-align: center;
+}
+
+.btn-duo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+}
+
+.btn-duo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-duo:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.duo-sidebar-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Duo Share Modal (reuses battle share styling) */
+.duo-share-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    padding: 20px;
+}
+
+.duo-share-modal.active { opacity: 1; }
+
+.duo-share-content {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    position: relative;
+    animation: battleSlideUp 0.4s ease;
+}
+
+.duo-share-close {
+    position: absolute;
+    top: 15px; right: 15px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.duo-share-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.duo-share-icon { font-size: 48px; margin-bottom: 10px; }
+.duo-share-header h2 { font-size: 1.5rem; margin-bottom: 8px; }
+.duo-share-header p { color: var(--text-secondary); }
+
+.duo-share-link {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.duo-share-link input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.duo-share-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.duo-share-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s;
+    color: #fff;
+}
+
+.duo-share-btn:hover { transform: translateY(-2px); }
+.duo-share-btn.whatsapp { background: #25D366; }
+.duo-share-btn.twitter { background: #1DA1F2; }
+.duo-share-btn.linkedin { background: #0077B5; }
+
+.duo-share-note {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 14px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+}
+
+.duo-share-note i {
+    color: var(--primary);
+    margin-right: 6px;
+}
+
+/* Duo Responsive */
+@media (max-width: 768px) {
+    #duoPage.active { padding: 20px 15px; }
+    .duo-landing-card { padding: 35px 20px; }
+    .duo-landing-card h1 { font-size: 1.5rem; }
+    .duo-perks { flex-direction: column; align-items: center; }
+    .duo-share-buttons { flex-direction: column; }
+    .duo-share-content { padding: 30px 20px; }
+    .duo-banner { margin: 0 15px 15px; padding: 12px 16px; font-size: 0.9rem; }
+    .duo-battle-banner { margin: 0 15px 15px; }
+    .duo-battle-inner { flex-direction: column; text-align: center; }
+}
+
+@media (max-width: 480px) {
+    .duo-landing-card { padding: 25px 16px; }
+    .duo-topic-badge { font-size: 1rem; padding: 10px 20px; }
+}

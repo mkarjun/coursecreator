@@ -254,6 +254,11 @@ const CourseGenerator = {
         }
         
         UI.updateProgressDisplay(this.currentCourse);
+
+        // Notify StudyDuo if we're in a duo session
+        if (typeof StudyDuo !== 'undefined') {
+            StudyDuo.onQuizComplete(score, answers);
+        }
         
         return { score, correct, total: quiz.length, results };
     },
