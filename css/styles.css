@@ -2703,7 +2703,7 @@ a:hover {
    ================================================================= */
 
 /* Battle Page Layout */
-#battlePage {
+#battlePage.active {
     display: flex;
     justify-content: center;
     align-items: flex-start;
