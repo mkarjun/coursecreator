@@ -1,60 +1,24 @@
-// Cloudflare Function: GET /api/youtube
-// Proxies requests to YouTube API, keeping API key server-side
+// API Handler: GET /api/youtube
+// Thin routing layer — delegates to YoutubeService
 
-export async function onRequestGet(context) {
+import { withMiddleware } from '../_shared/middleware.js';
+import { jsonResponse } from '../_shared/response.js';
+import { YoutubeService } from '../_services/youtube-service.js';
+import { ValidationError } from '../_shared/validators.js';
+export { onRequestOptions } from '../_shared/middleware.js';
+
+async function handleGet(context) {
     const { request, env } = context;
-    
-    const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-    };
+    const url = new URL(request.url);
+    const query = url.searchParams.get('q');
+    const maxResults = url.searchParams.get('maxResults') || '5';
 
-    try {
-        const url = new URL(request.url);
-        const query = url.searchParams.get('q');
-        const maxResults = url.searchParams.get('maxResults') || '5';
-
-        if (!query) {
-            return new Response(JSON.stringify({ error: 'Query parameter "q" is required' }), {
-                status: 400,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-        }
-
-        const YOUTUBE_API_KEY = env.YOUTUBE_API_KEY;
-        if (!YOUTUBE_API_KEY) {
-            return new Response(JSON.stringify({ error: 'YouTube API key not configured' }), {
-                status: 500,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-        }
-
-        const youtubeUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`;
-        
-        const response = await fetch(youtubeUrl);
-        const data = await response.json();
-
-        return new Response(JSON.stringify(data), {
-            status: response.status,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-
-    } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+    if (!query) {
+        throw new ValidationError('Query parameter "q" is required');
     }
+
+    const { data, status } = await YoutubeService.search(env, { query, maxResults });
+    return jsonResponse(data, status);
 }
 
-// Handle CORS preflight
-export async function onRequestOptions() {
-    return new Response(null, {
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        }
-    });
-}
+export const onRequestGet = withMiddleware(handleGet);

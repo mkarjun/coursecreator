@@ -1,5 +1,6 @@
 # Environment files with secrets
 js/env.js
+/.wrangler
 
 # Local environment files
 .env
@@ -20,3 +21,9 @@ npm-debug.log*
 
 # Dependencies (if using build tools)
 node_modules/
+run-tests.js
+test-local.js
+package.json
+package-lock.json
+wrangler.jsonc
+test-api.html
