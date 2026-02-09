@@ -1,127 +1,159 @@
 # Course Creator
 
-An educational application that transforms any topic into a structured online course with curated YouTube videos, AI-generated notes, quizzes, and achievement badges.
+An open-source educational app that turns any topic into a structured learning course — with curated YouTube videos, AI-generated notes & quizzes, 1v1 battles, and study duo mode.
+
+🌐 **Live:** [coursecreator.mkarjun.com](https://coursecreator.mkarjun.com)
 
 ![Course Creator](https://img.shields.io/badge/Course-Creator-00d4aa)
-![Static Site](https://img.shields.io/badge/Type-Static%20Site-blue)
+![Cloudflare Pages](https://img.shields.io/badge/Hosted-Cloudflare%20Pages-F38020)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## ✨ Features
 
-- **🔍 Topic Search**: Enter any topic and get a complete structured course
-- **📺 Curated Videos**: Automatically fetches best YouTube videos organized by lesson
-- **📝 AI-Generated Content**: Course introductions, lesson content, and study notes
-- **❓ Interactive Quizzes**: Test your knowledge with auto-generated quizzes
-- **🏆 Achievement Badges**: Earn badges as you complete courses and quizzes
-- **📊 Progress Tracking**: Track your learning progress across all courses
-- **💾 Local Storage**: All data saved locally - no account needed
-- **🌙 Dark/Light Mode**: Choose your preferred theme
-- **📱 Responsive Design**: Works on desktop, tablet, and mobile
+- **📚 Structured Courses** — Enter any topic → 4 lessons progressing from fundamentals to advanced
+- **📺 Curated Videos** — Best YouTube videos auto-selected for each lesson
+- **📝 AI Notes & Roadmap** — Study guide with phases, key concepts, and practice exercises
+- **❓ Quizzes** — AI-generated factual quizzes to test your knowledge
+- **⚔️ 1v1 Battles** — Challenge a friend, both take the same quiz, compare scores
+- **👥 Study Duo** — Invite a buddy to learn the same course together, auto-battle at the end
+- **🌐 Community Links** — Auto-curated Reddit, Discord, and forum links per topic
+- **🏆 Badges & Streaks** — Gamified progress tracking
+- **🔐 Auth** — Google, Microsoft, or Guest mode
+- **🌙 Dark/Light Mode** — Responsive on all devices
 
-## 🚀 Getting Started
+## 🏗️ Architecture
 
-### Option 1: Direct Usage (No API Keys - Demo Mode)
-Simply open `index.html` in your browser. The app will work in demo mode with sample videos and pre-generated content.
+```mermaid
+graph TB
+    User(("👤 User"))
 
-### Option 2: Full Functionality (With API Keys)
-1. Open the app in your browser
-2. Go to **Settings**
-3. Add your API keys:
-   - **YouTube Data API Key**: [Get from Google Console](https://console.developers.google.com/)
-   - **OpenAI API Key**: [Get from OpenAI](https://platform.openai.com/api-keys)
-4. Save and start creating courses!
+    subgraph Cloudflare["☁️ Cloudflare"]
+        Pages["📦 Cloudflare Pages<br>Static Hosting + CDN"]
+        Functions["⚡ Pages Functions<br>Serverless API"]
+        D1[("🗄️ Cloudflare D1<br>SQLite Database")]
+        Secrets["🔐 Env Secrets"]
+    end
 
-## 🛠️ Deployment Options
+    subgraph Google["🔵 Google Cloud"]
+        Gemini["🤖 Gemini AI API<br>Content + Quiz Generation"]
+        YouTube["📺 YouTube Data API v3<br>Video Search"]
+        GAuth["🔑 Google OAuth"]
+    end
 
-### Static Hosting (Free)
-This is a static site and can be deployed on:
+    MSAuth["🔑 Microsoft OAuth"]
 
-- **GitHub Pages**: Push to a repo and enable Pages
-- **Netlify**: Drag and drop the folder
-- **Vercel**: Import from GitHub
-- **Cloudflare Pages**: Connect your repo
+    GitHub["🐙 GitHub<br>Auto-Deploy on Push"]
 
-### Local Development
-```bash
-# Using Python
-python -m http.server 8000
+    User -->|HTTPS| Pages
+    User -->|API Calls| Functions
+    User -->|Sign-in| GAuth
+    User -->|Sign-in| MSAuth
+    Functions --> D1
+    Functions -->|Proxied| Gemini
+    Functions -->|Proxied| YouTube
+    Functions -.-> Secrets
+    GitHub -->|CI/CD| Pages
 
-# Using Node.js
-npx serve
-
-# Using VS Code
-# Install "Live Server" extension and click "Go Live"
+    style Cloudflare fill:#f6821f11,stroke:#f6821f
+    style Google fill:#4285f411,stroke:#4285f4
 ```
+
+> **Demo Mode:** If API quotas are exhausted, the app falls back to placeholder videos and generic quizzes. It always loads — features degrade gracefully.
 
 ## 📁 Project Structure
 
 ```
-course-creator/
-├── index.html          # Main HTML file
-├── css/
-│   └── styles.css      # All styles
+coursecreator/
+├── index.html                    # Main SPA
+├── css/styles.css                # All styles
 ├── js/
-│   ├── config.js       # Configuration and settings
-│   ├── api-service.js  # YouTube & OpenAI API calls
-│   ├── storage.js      # Local storage management
-│   ├── course-generator.js  # Course creation logic
-│   ├── ui.js           # UI manipulation
-│   └── app.js          # Main application entry
-└── README.md           # This file
+│   ├── app.js                    # Entry point
+│   ├── auth.js                   # Google/Microsoft/Guest auth
+│   ├── config.js                 # Prompts, badges, settings
+│   ├── api-service.js            # API calls + demo fallbacks
+│   ├── course-generator.js       # Course creation orchestrator
+│   ├── topic-intelligence.js     # Offline topic classification
+│   ├── ui.js                     # UI rendering
+│   ├── storage.js                # LocalStorage + D1 sync
+│   ├── database-service.js       # D1 database operations
+│   ├── battle.js                 # 1v1 challenge system
+│   └── duo.js                    # Study duo mode
+├── functions/
+│   ├── api/                      # API route handlers (thin layer)
+│   │   ├── generate.js           # POST /api/generate
+│   │   ├── youtube.js            # GET  /api/youtube
+│   │   ├── courses.js            # POST /api/courses
+│   │   ├── users.js              # POST /api/users
+│   │   ├── battle.js             # POST /api/battle
+│   │   ├── duo.js                # POST /api/duo
+│   │   ├── config.js             # GET  /api/config
+│   │   └── cleanup.js            # GET  /api/cleanup + Cron
+│   ├── _services/                # Business logic
+│   ├── _repositories/            # Data access (D1 queries)
+│   └── _shared/                  # Middleware, utils, validators
+├── schema.sql                    # D1 database schema
+├── wrangler.jsonc                # Cloudflare config
+├── _headers                      # Cache control rules
+├── robots.txt                    # SEO
+└── sitemap.xml                   # SEO
 ```
 
-## 🔑 API Keys Setup
+## 🚀 Getting Started
 
-### YouTube Data API
-1. Go to [Google Cloud Console](https://console.developers.google.com/)
-2. Create a new project
-3. Enable "YouTube Data API v3"
-4. Create credentials (API Key)
-5. Copy the key to Settings
+### Try It
+Visit [coursecreator.mkarjun.com](https://coursecreator.mkarjun.com) — no setup needed.
 
-### OpenAI API
-1. Go to [OpenAI Platform](https://platform.openai.com/)
-2. Sign up or log in
-3. Go to API Keys
-4. Create a new key
-5. Copy the key to Settings
+### Local Development
+```bash
+# Clone
+git clone https://github.com/mkarjun/coursecreator.git
+cd coursecreator
 
-## 🏅 Badges System
+# Create js/env.js with your keys (see js/env.template.js)
+
+# Run locally with Wrangler (includes D1 + Functions)
+npx wrangler pages dev ./
+
+# Or just open index.html for demo mode
+```
+
+## 🔑 API Keys
+
+| Key | Provider | Purpose |
+|-----|----------|---------|
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/) | Course content + quiz generation |
+| `YOUTUBE_API_KEY` | [Google Cloud Console](https://console.cloud.google.com/) | YouTube video search |
+| `GOOGLE_CLIENT_ID` | Google Cloud Console | Google OAuth sign-in |
+| `MICROSOFT_CLIENT_ID` | [Azure Portal](https://portal.azure.com/) | Microsoft OAuth sign-in |
+
+## 🏅 Badges
 
 | Badge | Name | Requirement |
 |-------|------|-------------|
 | 🚀 | First Steps | Complete 1 course |
 | 📚 | Knowledge Seeker | Complete 5 courses |
 | 🎓 | Scholar | Complete 10 courses |
-| ⭐ | Quiz Master | Get 100% on a quiz |
-| 👑 | Perfectionist | Get 100% on 5 quizzes |
+| ⭐ | Quiz Master | 100% on a quiz |
+| 👑 | Perfectionist | 100% on 5 quizzes |
 | 🔥 | Consistent Learner | 3-day streak |
 | 🔥 | Week Warrior | 7-day streak |
 | ▶️ | Video Marathon | Watch 50 videos |
 
-## 🔒 Privacy
+## 🤝 Contributing
 
-- All data is stored locally in your browser
-- API keys are stored locally and never sent to our servers
-- API calls go directly to YouTube/OpenAI
+This is an open-source project and contributions are welcome!
+
+- 🐛 Report bugs via [Issues](https://github.com/mkarjun/coursecreator/issues)
+- 💡 Suggest features
+- 🔧 Submit pull requests
+
+## ☕ Support
+
+If you find this useful, consider [buying me a coffee](https://buymeacoffee.com/) to help cover API and infrastructure costs.
 
 ## 📝 License
 
-MIT License - feel free to use and modify!
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest features
-- Submit pull requests
-
-## 🙏 Acknowledgments
-
-- YouTube Data API for video search
-- OpenAI for content generation
-- Font Awesome for icons
-- Picsum for demo thumbnails
+MIT License — free to use and modify.
 
 ---
 
